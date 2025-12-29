@@ -134,6 +134,8 @@ function useActiveRepos(queryClient: ReturnType<typeof useQueryClient>): ActiveR
   return activeRepos
 }
 
+type SessionRepoInfo = { url: string; directory?: string }
+
 export function PermissionProvider({ children }: { children: React.ReactNode }) {
   const [showDialog, setShowDialog] = useState(true)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
@@ -142,6 +144,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
   const clientsRef = useRef<Map<string, OpenCodeClient>>(new Map())
   const eventSourceRefs = useRef<Map<string, EventSource>>(new Map())
   const prevPendingCountRef = useRef(0)
+  const sessionRepoMapRef = useRef<Map<string, SessionRepoInfo>>(new Map())
 
   const {
     currentPermission,
@@ -172,7 +175,6 @@ prevPendingCountRef.current = pendingCount
   }, [pendingCount, showDialog])
 
   const getClient = useCallback((sessionID: string): OpenCodeClient | null => {
-    
     for (const repo of activeRepos) {
       if (repo.sessions.some((s) => s.id === sessionID)) {
         const clientKey = `${repo.url}|${repo.directory ?? ''}`
@@ -184,35 +186,43 @@ prevPendingCountRef.current = pendingCount
         return client
       }
     }
-    
-    if (activeRepos.length === 0) {
-      const cache = queryClient.getQueryCache()
-      const queries = cache.getAll()
-      
-      for (const query of queries) {
-        const key = query.queryKey
-        
-        if (key[0] === 'opencode' && key.length >= 5 && key[1] === 'session') {
-          const sessionData = query.state.data as { id: string } | undefined
-          if (sessionData?.id === sessionID) {
-            const url = key[2] as string
-            const directory = key[4] as string | undefined
-            
-            if (!url || typeof url !== 'string') continue
-            
-            const clientKey = `${url}|${directory ?? ''}`
-            let client = clientsRef.current.get(clientKey)
-            if (!client) {
-              client = new OpenCodeClient(url, directory)
-              clientsRef.current.set(clientKey, client)
-            }
-            console.log('[PermissionContext] Created client from query cache for fallback')
-            return client
+
+    const repoInfo = sessionRepoMapRef.current.get(sessionID)
+    if (repoInfo) {
+      const clientKey = `${repoInfo.url}|${repoInfo.directory ?? ''}`
+      let client = clientsRef.current.get(clientKey)
+      if (!client) {
+        client = new OpenCodeClient(repoInfo.url, repoInfo.directory)
+        clientsRef.current.set(clientKey, client)
+      }
+      return client
+    }
+
+    const cache = queryClient.getQueryCache()
+    const queries = cache.getAll()
+
+    for (const query of queries) {
+      const key = query.queryKey
+
+      if (key[0] === 'opencode' && key.length >= 5 && key[1] === 'session') {
+        const sessionData = query.state.data as { id: string } | undefined
+        if (sessionData?.id === sessionID) {
+          const url = key[2] as string
+          const directory = key[4] as string | undefined
+
+          if (!url || typeof url !== 'string') continue
+
+          const clientKey = `${url}|${directory ?? ''}`
+          let client = clientsRef.current.get(clientKey)
+          if (!client) {
+            client = new OpenCodeClient(url, directory)
+            clientsRef.current.set(clientKey, client)
           }
+          return client
         }
       }
     }
-    
+
     return null
   }, [activeRepos, queryClient])
 
@@ -275,6 +285,10 @@ prevPendingCountRef.current = pendingCount
         try {
           const event = JSON.parse(e.data)
           if ('id' in event.properties && 'sessionID' in event.properties) {
+            sessionRepoMapRef.current.set(event.properties.sessionID, {
+              url: repo.url,
+              directory: repo.directory,
+            })
             permissionEvents.emit({ type: 'add', permission: event.properties })
           }
         } catch (err) {
