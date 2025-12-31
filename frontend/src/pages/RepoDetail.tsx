@@ -8,7 +8,8 @@ import { RepoDetailHeader } from "@/components/layout/RepoDetailHeader";
 import { SwitchConfigDialog } from "@/components/repo/SwitchConfigDialog";
 import { RepoMcpDialog } from "@/components/repo/RepoMcpDialog";
 import { useCreateSession } from "@/hooks/useOpenCode";
-import { OPENCODE_API_ENDPOINT, API_BASE_URL } from "@/config";
+import { API_BASE_URL } from "@/config";
+import { useServerUrlForDirectory } from "@/stores/serverStore";
 import { useSwipeBack } from "@/hooks/useMobile";
 
 import { Loader2 } from "lucide-react";
@@ -50,9 +51,8 @@ export function RepoDetail() {
     },
   });
 
-  const opcodeUrl = OPENCODE_API_ENDPOINT;
-  
   const repoDirectory = repo?.fullPath;
+  const opcodeUrl = useServerUrlForDirectory(repoDirectory);
 
   const createSessionMutation = useCreateSession(opcodeUrl, repoDirectory);
 

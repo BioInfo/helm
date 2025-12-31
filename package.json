@@ -1,6 +1,6 @@
 {
-  "name": "opencode-manager",
-  "version": "0.5.4",
+  "name": "helm",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@9.15.0",

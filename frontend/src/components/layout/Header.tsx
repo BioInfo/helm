@@ -1,6 +1,7 @@
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
+import { ServerIndicator } from "@/components/servers";
 import { useSettingsDialog } from "@/hooks/useSettingsDialog";
 import { useTheme } from "@/hooks/useTheme";
 import type { ReactNode } from "react";
@@ -36,6 +37,7 @@ export function Header({ title, backTo, action }: HeaderProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <ServerIndicator />
             {action && <div>{action}</div>}
             <Button
               variant="ghost"

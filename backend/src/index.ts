@@ -12,6 +12,7 @@ import { createTTSRoutes, cleanupExpiredCache } from './routes/tts'
 import { createFileRoutes } from './routes/files'
 import { createProvidersRoutes } from './routes/providers'
 import { createOAuthRoutes } from './routes/oauth'
+import { createServersRoutes } from './routes/servers'
 import { ensureDirectoryExists, writeFileContent, fileExists, readFileContent } from './services/file-operations'
 import { SettingsService } from './services/settings'
 import { opencodeServerManager } from './services/opencode-single-server'
@@ -228,6 +229,7 @@ app.route('/api/files', createFileRoutes(db))
 app.route('/api/providers', createProvidersRoutes())
 app.route('/api/oauth', createOAuthRoutes())
 app.route('/api/tts', createTTSRoutes(db))
+app.route('/api/servers', createServersRoutes())
 
 app.all('/api/opencode/*', async (c) => {
   const request = c.req.raw
@@ -252,8 +254,8 @@ if (isProduction) {
 } else {
   app.get('/', (c) => {
     return c.json({
-      name: 'OpenCode WebUI',
-      version: '2.0.0',
+      name: 'Helm',
+      version: '0.1.0',
       status: 'running',
       endpoints: {
         health: '/api/health',
@@ -262,6 +264,7 @@ if (isProduction) {
         sessions: '/api/sessions',
         files: '/api/files',
         providers: '/api/providers',
+        servers: '/api/servers',
         opencode_proxy: '/api/opencode/*'
       }
     })
@@ -317,4 +320,4 @@ serve({
   hostname: HOST,
 })
 
-logger.info(`🚀 OpenCode WebUI API running on http://${HOST}:${PORT}`)
+logger.info(`Helm API running on http://${HOST}:${PORT}`)

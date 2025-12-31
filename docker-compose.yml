@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: opencode-manager
+    container_name: helm
     ports:
       - "5003:5003"
       - "5100:5100"
@@ -27,8 +27,8 @@ services:
       - CLEANUP_INTERVAL_MINUTES=60
       - DEBUG=false
     volumes:
-      - opencode-workspace:/workspace
-      - opencode-data:/app/data
+      - helm-workspace:/workspace
+      - helm-data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5003/api/health"]
@@ -38,7 +38,7 @@ services:
       start_period: 40s
 
 volumes:
-  opencode-workspace:
+  helm-workspace:
     driver: local
-  opencode-data:
+  helm-data:
     driver: local

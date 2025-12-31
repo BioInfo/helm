@@ -12,7 +12,8 @@ import { SessionList } from "@/components/session/SessionList";
 import { FileBrowserSheet } from "@/components/file-browser/FileBrowserSheet";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useSession, useAbortSession, useUpdateSession, useMessages } from "@/hooks/useOpenCode";
-import { OPENCODE_API_ENDPOINT, API_BASE_URL } from "@/config";
+import { API_BASE_URL } from "@/config";
+import { useServerUrlForDirectory } from "@/stores/serverStore";
 import { useSSE } from "@/hooks/useSSE";
 import { useUIState } from "@/stores/uiStateStore";
 import { useSettings } from "@/hooks/useSettings";
@@ -71,9 +72,8 @@ export function SessionDetail() {
     },
   });
 
-  const opcodeUrl = OPENCODE_API_ENDPOINT;
-  
   const repoDirectory = repo?.fullPath;
+  const opcodeUrl = useServerUrlForDirectory(repoDirectory);
 
   const { data: rawMessages, isLoading: messagesLoading } = useMessages(opcodeUrl, sessionId, repoDirectory);
   const { data: session, isLoading: sessionLoading } = useSession(
