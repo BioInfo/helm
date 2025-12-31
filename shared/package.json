@@ -1,5 +1,5 @@
 {
-  "name": "@opencode-manager/shared",
+  "name": "@helm/shared",
   "version": "1.0.0",
   "type": "module",
   "private": true,

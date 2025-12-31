@@ -35,7 +35,7 @@ Helm is a fork of [chriswritescode-dev/opencode-web](https://github.com/chriswri
 
 ```bash
 # Clone
-git clone https://github.com/YOUR_USERNAME/helm.git
+git clone https://github.com/BioInfo/helm.git
 cd helm
 
 # Install

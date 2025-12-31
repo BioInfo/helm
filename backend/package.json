@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.5",
-    "@opencode-manager/shared": "workspace:*",
+    "@helm/shared": "workspace:*",
     "archiver": "^7.0.1",
     "better-sqlite3": "^12.5.0",
     "dotenv": "^17.2.3",

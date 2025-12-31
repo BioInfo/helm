@@ -11,20 +11,18 @@
 ## Quick Start
 
 ```bash
-# 1. Fork and clone base project
-git clone https://github.com/chriswritescode-dev/opencode-web.git helm
+# Clone
+git clone https://github.com/BioInfo/helm.git
 cd helm
 
-# 2. Rename project
-sed -i 's/opencode-web/helm/g' package.json docker-compose.yml README.md
-# Update branding in frontend as needed
+# Install
+pnpm install
 
-# 3. Install and verify
-bun install
-npm run dev
+# Run
+pnpm dev
 # Verify: http://localhost:5001 loads
 
-# 4. Start multiple OpenCode instances for testing
+# Start multiple OpenCode instances for testing
 cd ~/project-a && opencode &
 cd ~/project-b && opencode serve &
 cd ~/project-c && opencode &
@@ -40,11 +38,11 @@ Helm combines the best of three projects:
 | Git integration | chriswritescode-dev | ✅ Inherited |
 | MCP config UI | chriswritescode-dev | ✅ Inherited |
 | Docker deployment | chriswritescode-dev | ✅ Inherited |
-| **Multi-server discovery** | opencode-vibe | 🔨 To port |
-| **Cross-process messaging** | opencode-vibe | 🔨 To port |
-| **Embedded terminal** | VibeTunnel | 🔨 To add |
-| **MCP tool visibility** | Our addition | 🔨 To build |
-| **Touch gestures** | Our addition | 🔨 To build |
+| **Multi-server discovery** | opencode-vibe | ✅ Implemented |
+| **Embedded terminal** | VibeTunnel | ✅ Implemented |
+| **MCP tool visibility** | Our addition | ✅ Implemented |
+| **Touch gestures** | Our addition | ✅ Implemented |
+| **Offline support** | Our addition | ✅ Implemented |
 
 ## Architecture
 
