@@ -47,35 +47,35 @@ Quick reference for building Helm. Check off as you complete.
 ## Phase 2: MCP Tool Visibility
 
 ### 2.1 MCP Store
-- [ ] Create `frontend/src/stores/mcpStore.ts`
-- [ ] Interface for MCPToolCall
-- [ ] addToolCall, updateToolCall actions
-- [ ] Filter by session, server
+- [x] Create `frontend/src/stores/mcpStore.ts`
+- [x] Interface for MCPToolCall
+- [x] addToolCall, updateToolCall actions
+- [x] Filter by session, server
 
 ### 2.2 SSE Hook for Tool Calls
-- [ ] Create `frontend/src/hooks/useToolCalls.ts`
-- [ ] Parse tool_use / tool_result events from SSE
-- [ ] Update store in real-time
-- [ ] Handle errors
+- [x] Integrated into `frontend/src/hooks/useSSE.ts` (line 142)
+- [x] Parse tool_use / tool_result events from SSE
+- [x] Update store in real-time
+- [x] Handle errors
 
 ### 2.3 Tool Call Feed
-- [ ] Create `frontend/src/components/mcp/ToolCallFeed.tsx`
-- [ ] Reverse-chronological list
-- [ ] Pulsing indicator for active calls
-- [ ] Duration badge for completed
-- [ ] Error styling for failed
+- [x] Create `frontend/src/components/mcp/ToolCallFeed.tsx`
+- [x] Reverse-chronological list
+- [x] Pulsing indicator for active calls
+- [x] Duration badge for completed
+- [x] Error styling for failed
 
 ### 2.4 Tool Call Detail
-- [ ] Create `frontend/src/components/mcp/ToolCallDetail.tsx`
-- [ ] Bottom sheet on mobile
-- [ ] JSON view for input/output
-- [ ] Copy buttons
-- [ ] Timing info
+- [x] Create `frontend/src/components/mcp/ToolCallDetail.tsx`
+- [x] Dialog-based detail view (mobile-friendly)
+- [x] JSON view for input/output
+- [x] Copy buttons
+- [x] Timing info
 
 ### 2.5 Integration
-- [ ] Add "Tools" tab to navigation
-- [ ] Show tool call count badge
-- [ ] Visual indicator in chat during tool execution
+- [x] Add "Tools" indicator to header navigation
+- [x] Show tool call count badge (pulsing for active)
+- [x] Visual indicator in chat during tool execution (via ToolCallPart)
 
 ---
 

@@ -2,10 +2,12 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useOpenCodeClient } from './useOpenCode'
 import type { SSEEvent, MessageListResponse } from '@/api/types'
+import type { components } from '@/api/opencode-types'
 import { permissionEvents } from './usePermissionRequests'
 import { showToast } from '@/lib/toast'
 import { settingsApi } from '@/api/settings'
 import { useSessionStatus } from '@/stores/sessionStatusStore'
+import { useMCPStore } from '@/stores/mcpStore'
 
 const MAX_RECONNECT_DELAY = 30000
 const INITIAL_RECONNECT_DELAY = 1000
@@ -52,6 +54,7 @@ export const useSSE = (opcodeUrl: string | null | undefined, directory?: string)
   const [error, setError] = useState<string | null>(null)
   const [isReconnecting, setIsReconnecting] = useState(false)
   const setSessionStatus = useSessionStatus((state) => state.setStatus)
+  const addOrUpdateToolCall = useMCPStore((state) => state.addOrUpdateToolCall)
 
   const scheduleReconnect = useCallback((connectFn: () => void) => {
     if (!mountedRef.current) return
@@ -134,6 +137,10 @@ export const useSSE = (opcodeUrl: string | null | undefined, directory?: string)
           const { part } = event.properties
           const sessionID = part.sessionID
           const messageID = part.messageID
+          
+          if (part.type === 'tool') {
+            addOrUpdateToolCall(part as components['schemas']['ToolPart'])
+          }
           
           const currentData = queryClient.getQueryData<MessageListResponse>(['opencode', 'messages', opcodeUrl, sessionID, directory])
           if (!currentData) return
