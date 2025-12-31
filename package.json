@@ -7,7 +7,7 @@
   "scripts": {
     "predev": "bash scripts/setup-dev.sh",
     "dev": "concurrently \"pnpm:dev:backend\" \"pnpm:dev:frontend\"",
-    "dev:backend": "bun --watch backend/src/index.ts",
+    "dev:backend": "npx tsx watch backend/src/index.ts",
     "dev:frontend": "pnpm --filter frontend dev",
     "build": "pnpm run build:backend && pnpm run build:frontend",
     "build:backend": "pnpm --filter backend build",

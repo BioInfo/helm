@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Loader2, CheckCircle2, XCircle, Clock, Copy, Check, X } from 'lucide-react'
+import { Loader2, CheckCircle2, XCircle, Clock, Copy, Check } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { MCPToolCall } from '@/stores/mcpStore'
 import { cn } from '@/lib/utils'
@@ -13,14 +13,6 @@ interface ToolCallDetailProps {
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`
   return `${(ms / 1000).toFixed(2)}s`
-}
-
-function formatTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString([], { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    second: '2-digit'
-  })
 }
 
 function formatDate(timestamp: number): string {

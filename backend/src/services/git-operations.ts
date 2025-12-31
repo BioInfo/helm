@@ -1,7 +1,7 @@
 import { executeCommand } from '../utils/process'
 import { logger } from '../utils/logger'
 import { SettingsService } from './settings'
-import type { Database } from 'bun:sqlite'
+import type Database from 'better-sqlite3'
 import path from 'path'
 import { createGitHubGitEnv, createNoPromptGitEnv } from '../utils/git-auth'
 

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useMobile } from '@/hooks/useMobile'
 import { BottomNav } from './BottomNav'
 import { cn } from '@/lib/utils'

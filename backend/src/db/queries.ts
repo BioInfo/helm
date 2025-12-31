@@ -1,4 +1,4 @@
-import type { Database } from 'bun:sqlite'
+import type Database from 'better-sqlite3'
 import type { Repo, CreateRepoInput } from '../types/repo'
 import { getReposPath } from '@opencode-manager/shared/config/env'
 import path from 'path'

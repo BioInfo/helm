@@ -4,7 +4,7 @@ import { logger } from '../utils/logger'
 import { createGitHubGitEnv, createNoPromptGitEnv } from '../utils/git-auth'
 import { SettingsService } from './settings'
 import { getWorkspacePath, getOpenCodeConfigFilePath, ENV } from '@opencode-manager/shared/config/env'
-import type { Database } from 'bun:sqlite'
+import type Database from 'better-sqlite3'
 
 const OPENCODE_SERVER_PORT = ENV.OPENCODE.PORT
 const OPENCODE_SERVER_DIRECTORY = getWorkspacePath()

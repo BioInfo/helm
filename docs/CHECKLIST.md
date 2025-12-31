@@ -7,10 +7,10 @@ Quick reference for building Helm. Check off as you complete.
 ## Phase 1: Setup & Multi-Server Discovery
 
 ### 1.1 Project Setup
-- [ ] Fork chriswritescode-dev/opencode-web
-- [ ] Rename to "helm" in package.json, docker-compose.yml
-- [ ] Update branding (logo, title, etc.)
-- [ ] Verify base project runs: `bun install && npm run dev`
+- [x] Fork chriswritescode-dev/opencode-web
+- [x] Rename to "helm" in package.json, docker-compose.yml
+- [x] Update branding (index.html, manifest.json, README)
+- [x] Verify build succeeds: `pnpm build`
 - [ ] Test with single OpenCode instance
 
 ### 1.2 Discovery Backend
@@ -144,32 +144,34 @@ Quick reference for building Helm. Check off as you complete.
 ## Phase 5: Observability & Enhancements
 
 ### 5.1 Token/Cost Tracking
-- [ ] Create `frontend/src/stores/observabilityStore.ts`
-- [ ] Parse usage events from SSE
-- [ ] Create `TokenCounter.tsx` component
-- [ ] Configurable cost rates per model
-- [ ] Session cost display
+- [x] Create `frontend/src/stores/observabilityStore.ts`
+- [x] Parse usage events from SSE (via message completion)
+- [x] Create `TokenCounter.tsx` component
+- [x] Configurable cost rates per model
+- [x] Session cost display (integrated into ContextUsageIndicator)
 
 ### 5.2 Model Switching
-- [ ] Modify model selector to work mid-session
-- [ ] Add model badge to messages
-- [ ] Quick-switch UI for recent models
+- [x] Modify model selector to work mid-session (already supported - model passed per message)
+- [x] Add model badge to messages (modelID shown in MessageThread)
+- [x] Quick-switch UI for recent models (Recent Models section in ModelSelectDialog)
 
 ### 5.3 Offline Support
-- [ ] Service worker for PWA
-- [ ] Cache recent sessions in IndexedDB
-- [ ] Queue pending messages
-- [ ] Sync on reconnect
+- [x] Service worker for PWA (vite-plugin-pwa with Workbox)
+- [x] Cache recent sessions in IndexedDB (lib/offline/db.ts)
+- [x] Queue pending messages (pendingMessages store in IndexedDB)
+- [x] Sync on reconnect (useOfflineSync hook with online/offline listeners)
+- [x] Integrated into SessionDetail (caches session & messages automatically)
+- [x] Offline indicator in header (shows "Offline (N queued)" with WifiOff icon)
 
 ---
 
 ## Final Checklist
 
-- [ ] All TypeScript errors resolved
-- [ ] No console errors/warnings
-- [ ] Works on iPhone Safari
-- [ ] Works on iPad Safari
-- [ ] Works on desktop Chrome
-- [ ] Docker build succeeds
-- [ ] README updated with Helm branding
+- [x] All TypeScript errors resolved
+- [ ] No console errors/warnings (needs manual testing)
+- [ ] Works on iPhone Safari (needs manual testing)
+- [ ] Works on iPad Safari (needs manual testing)
+- [ ] Works on desktop Chrome (needs manual testing)
+- [x] Docker build succeeds
+- [x] README updated with Helm branding
 - [ ] Screenshots/demo video created

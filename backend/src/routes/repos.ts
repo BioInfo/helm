@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import type { Database } from 'bun:sqlite'
+import type Database from 'better-sqlite3'
 import * as db from '../db/queries'
 import * as repoService from '../services/repo'
 import { GitAuthenticationError } from '../services/repo'

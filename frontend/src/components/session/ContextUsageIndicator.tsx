@@ -1,6 +1,9 @@
 import { useContextUsage } from '@/hooks/useContextUsage'
 import { getModel, formatModelName } from '@/api/providers'
 import { useState, useEffect } from 'react'
+import { useSessionCost, formatCost } from '@/stores/observabilityStore'
+import { getPendingMessages } from '@/lib/offline/db'
+import { WifiOff } from 'lucide-react'
 
 interface ContextUsageIndicatorProps {
   opcodeUrl: string | null
@@ -12,7 +15,10 @@ interface ContextUsageIndicatorProps {
 
 export function ContextUsageIndicator({ opcodeUrl, sessionID, directory, isConnected, isReconnecting }: ContextUsageIndicatorProps) {
   const { totalTokens, contextLimit, usagePercentage, currentModel, isLoading } = useContextUsage(opcodeUrl, sessionID, directory)
+  const sessionCost = useSessionCost(sessionID)
   const [modelName, setModelName] = useState<string>('')
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
+  const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
     const loadModelName = async () => {
@@ -40,6 +46,32 @@ export function ContextUsageIndicator({ opcodeUrl, sessionID, directory, isConne
     loadModelName()
   }, [currentModel])
 
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
+  useEffect(() => {
+    const loadPendingCount = async () => {
+      if (sessionID) {
+        const pending = await getPendingMessages(sessionID)
+        setPendingCount(pending.length)
+      }
+    }
+    
+    loadPendingCount()
+    const interval = setInterval(loadPendingCount, 5000)
+    return () => clearInterval(interval)
+  }, [sessionID])
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
@@ -53,6 +85,17 @@ export function ContextUsageIndicator({ opcodeUrl, sessionID, directory, isConne
   }
 
   if (!isConnected) {
+    if (isOffline) {
+      return (
+        <div className="flex items-center gap-1.5">
+          <WifiOff className="w-3.5 h-3.5 text-amber-500" />
+          <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+            Offline
+            {pendingCount > 0 && ` (${pendingCount} queued)`}
+          </span>
+        </div>
+      )
+    }
     return <span className="text-xs text-muted-foreground font-medium">Disconnected</span>
   }
 
@@ -78,6 +121,11 @@ export function ContextUsageIndicator({ opcodeUrl, sessionID, directory, isConne
     return (
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground">{modelName}</span>
+        {sessionCost > 0 && (
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {formatCost(sessionCost)}
+          </span>
+        )}
       </div>
     )
   }
@@ -88,6 +136,11 @@ export function ContextUsageIndicator({ opcodeUrl, sessionID, directory, isConne
         <span className={`text-xs font-medium whitespace-nowrap ${getUsageTextColor(usagePercentage || 0)}`}>
           {totalTokens.toLocaleString()} / {contextLimit.toLocaleString()}
         </span>
+        {sessionCost > 0 && (
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {formatCost(sessionCost)}
+          </span>
+        )}
       </div>
     </div>
   )

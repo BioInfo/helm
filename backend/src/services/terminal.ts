@@ -1,4 +1,5 @@
 import * as pty from 'node-pty'
+import * as fs from 'fs'
 import { logger } from '../utils/logger'
 
 export interface TerminalSession {
@@ -8,6 +9,8 @@ export interface TerminalSession {
   createdAt: number
   lastActivity: number
   subscribers: Set<(data: string) => void>
+  outputBuffer: string[]  // Buffer output until first subscriber
+  hasHadSubscriber: boolean
 }
 
 const sessions = new Map<string, TerminalSession>()
@@ -16,7 +19,9 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000
 const CLEANUP_INTERVAL_MS = 60 * 1000
 
 function getShell(): string {
-  return process.env.SHELL || '/bin/bash'
+  const shell = '/bin/bash'
+  logger.info(`[Terminal] Using shell: ${shell}`)
+  return shell
 }
 
 export function createTerminalSession(sessionId: string, workdir: string): TerminalSession {
@@ -28,17 +33,40 @@ export function createTerminalSession(sessionId: string, workdir: string): Termi
 
   const shell = getShell()
   
-  const ptyProcess = pty.spawn(shell, [], {
+  logger.info(`[Terminal] Creating session ${sessionId}`)
+  logger.info(`[Terminal] Shell: ${shell}`)
+  logger.info(`[Terminal] Workdir: ${workdir}`)
+  logger.info(`[Terminal] node-pty available: ${typeof pty.spawn === 'function'}`)
+  
+  try {
+    fs.accessSync(shell, fs.constants.X_OK)
+    logger.info(`[Terminal] Shell ${shell} is executable`)
+  } catch (err) {
+    logger.error(`[Terminal] Shell ${shell} not accessible:`, err)
+  }
+  
+  try {
+    fs.accessSync(workdir, fs.constants.R_OK)
+    logger.info(`[Terminal] Workdir ${workdir} is accessible`)
+  } catch (err) {
+    logger.error(`[Terminal] Workdir ${workdir} not accessible:`, err)
+  }
+  
+  logger.info(`[Terminal] Spawning PTY with shell: ${shell}`)
+  const ptyProcess = pty.spawn(shell, ['--norc', '--noprofile', '-i'], {
     name: 'xterm-256color',
     cols: 80,
     rows: 24,
     cwd: workdir,
     env: {
-      ...process.env,
+      HOME: process.env.HOME || '/tmp',
+      PATH: process.env.PATH || '/usr/bin:/bin',
       TERM: 'xterm-256color',
-      COLORTERM: 'truecolor',
+      PS1: '\\$ ',
+      USER: process.env.USER || 'user',
     },
   })
+  logger.info(`[Terminal] PTY spawned, pid: ${ptyProcess.pid}`)
 
   const session: TerminalSession = {
     id: sessionId,
@@ -47,10 +75,23 @@ export function createTerminalSession(sessionId: string, workdir: string): Termi
     createdAt: Date.now(),
     lastActivity: Date.now(),
     subscribers: new Set(),
+    outputBuffer: [],
+    hasHadSubscriber: false,
   }
 
   ptyProcess.onData((data) => {
     session.lastActivity = Date.now()
+    logger.info(`[Terminal] PTY output for ${sessionId}: ${data.length} bytes, subscribers: ${session.subscribers.size}`)
+    
+    if (session.subscribers.size === 0 && !session.hasHadSubscriber) {
+      session.outputBuffer.push(data)
+      logger.info(`[Terminal] Buffered output for ${sessionId}, buffer size: ${session.outputBuffer.length}`)
+      if (session.outputBuffer.length > 1000) {
+        session.outputBuffer.shift()
+      }
+      return
+    }
+    
     for (const subscriber of session.subscribers) {
       try {
         subscriber(data)
@@ -124,6 +165,21 @@ export function subscribeToTerminal(
   
   session.subscribers.add(callback)
   session.lastActivity = Date.now()
+  
+  if (!session.hasHadSubscriber && session.outputBuffer.length > 0) {
+    session.hasHadSubscriber = true
+    const bufferedOutput = session.outputBuffer.join('')
+    session.outputBuffer = []
+    logger.info(`[Terminal] Flushing ${bufferedOutput.length} bytes of buffered output for ${sessionId}`)
+    try {
+      callback(bufferedOutput)
+    } catch (err) {
+      logger.error(`Failed to send buffered data to subscriber for session ${sessionId}:`, err)
+    }
+  } else {
+    logger.info(`[Terminal] No buffered output for ${sessionId}, hasHadSubscriber: ${session.hasHadSubscriber}, buffer: ${session.outputBuffer.length}`)
+  }
+  session.hasHadSubscriber = true
   
   return () => {
     session.subscribers.delete(callback)

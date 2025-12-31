@@ -1,6 +1,6 @@
 export const DEFAULTS = {
   SERVER: {
-    PORT: 5003,
+    PORT: 5001,
     HOST: '0.0.0.0',
     CORS_ORIGIN: 'http://localhost:5173',
   },

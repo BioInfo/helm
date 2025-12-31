@@ -1,7 +1,7 @@
 import { executeCommand } from '../utils/process'
 import { ensureDirectoryExists } from './file-operations'
 import * as db from '../db/queries'
-import type { Database } from 'bun:sqlite'
+import type Database from 'better-sqlite3'
 import type { Repo, CreateRepoInput } from '../types/repo'
 import { logger } from '../utils/logger'
 import { SettingsService } from './settings'

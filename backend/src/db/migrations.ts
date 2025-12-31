@@ -1,16 +1,16 @@
-import { Database } from 'bun:sqlite'
+import Database from 'better-sqlite3'
 import { logger } from '../utils/logger'
 
-export function runMigrations(db: Database): void {
+export function runMigrations(db: Database.Database): void {
   try {
     const tableInfo = db.prepare("PRAGMA table_info(repos)").all() as any[]
     
     const repoUrlColumn = tableInfo.find((col: any) => col.name === 'repo_url')
     if (repoUrlColumn && repoUrlColumn.notnull === 1) {
       logger.info('Migrating repos table to allow nullable repo_url for local repos')
-      db.run('BEGIN TRANSACTION')
+      db.exec('BEGIN TRANSACTION')
       try {
-        db.run(`
+        db.exec(`
           CREATE TABLE repos_new (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             repo_url TEXT,
@@ -31,14 +31,14 @@ export function runMigrations(db: Database): void {
           .filter(col => existingColumns.includes(col))
         
         const columnsStr = columnsToCopy.join(', ')
-        db.run(`INSERT INTO repos_new (${columnsStr}) SELECT ${columnsStr} FROM repos`)
+        db.exec(`INSERT INTO repos_new (${columnsStr}) SELECT ${columnsStr} FROM repos`)
         
-        db.run('DROP TABLE repos')
-        db.run('ALTER TABLE repos_new RENAME TO repos')
-        db.run('COMMIT')
+        db.exec('DROP TABLE repos')
+        db.exec('ALTER TABLE repos_new RENAME TO repos')
+        db.exec('COMMIT')
         logger.info('Successfully migrated repos table to allow nullable repo_url')
       } catch (migrationError) {
-        db.run('ROLLBACK')
+        db.exec('ROLLBACK')
         throw migrationError
       }
     }
@@ -47,11 +47,11 @@ export function runMigrations(db: Database): void {
     
     if (!hasBranchColumn) {
       logger.info('Adding missing branch column to repos table')
-      db.run('ALTER TABLE repos ADD COLUMN branch TEXT')
+      db.exec('ALTER TABLE repos ADD COLUMN branch TEXT')
     }
     
     try {
-      db.run(`
+      db.exec(`
         CREATE UNIQUE INDEX IF NOT EXISTS idx_repo_url_branch 
         ON repos(repo_url, branch) 
         WHERE branch IS NOT NULL
@@ -61,7 +61,7 @@ export function runMigrations(db: Database): void {
     }
     
     try {
-      db.run(`
+      db.exec(`
         CREATE UNIQUE INDEX IF NOT EXISTS idx_local_path 
         ON repos(local_path)
       `)
@@ -84,7 +84,7 @@ export function runMigrations(db: Database): void {
       if (!hasColumn) {
         logger.info(`Adding missing column: ${column.name}`)
         try {
-          db.run(column.sql)
+          db.exec(column.sql)
         } catch (error) {
           logger.debug(`Column ${column.name} might already exist:`, error)
         }
@@ -100,7 +100,7 @@ export function runMigrations(db: Database): void {
     
     for (const indexSql of indexes) {
       try {
-        db.run(indexSql)
+        db.exec(indexSql)
       } catch (error) {
         logger.debug('Index already exists:', error)
       }

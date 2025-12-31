@@ -1,14 +1,14 @@
-import { Database } from 'bun:sqlite'
+import Database from 'better-sqlite3'
 import { logger } from '../utils/logger'
 import { mkdirSync } from 'fs'
 import { dirname } from 'path'
 import { runMigrations } from './migrations'
 
-export function initializeDatabase(dbPath: string = './data/opencode.db'): Database {
+export function initializeDatabase(dbPath: string = './data/opencode.db'): Database.Database {
   mkdirSync(dirname(dbPath), { recursive: true })
   const db = new Database(dbPath)
   
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS repos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       repo_url TEXT,

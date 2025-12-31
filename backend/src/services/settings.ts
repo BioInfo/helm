@@ -1,4 +1,4 @@
-import { Database } from 'bun:sqlite'
+import Database from 'better-sqlite3'
 import { unlinkSync, existsSync } from 'fs'
 import { getOpenCodeConfigFilePath } from '@opencode-manager/shared/config/env'
 import { logger } from '../utils/logger'
@@ -51,7 +51,7 @@ export class SettingsService {
 
   getSettings(userId: string = 'default'): SettingsResponse {
     const row = this.db
-      .query('SELECT preferences, updated_at FROM user_preferences WHERE user_id = ?')
+      .prepare('SELECT preferences, updated_at FROM user_preferences WHERE user_id = ?')
       .get(userId) as { preferences: string; updated_at: number } | undefined
 
     if (!row) {
@@ -95,7 +95,7 @@ export class SettingsService {
     const updatedAt = Date.now()
 
     this.db
-      .query(
+      .prepare(
         `INSERT INTO user_preferences (user_id, preferences, updated_at)
          VALUES (?, ?, ?)
          ON CONFLICT(user_id) DO UPDATE SET
@@ -113,7 +113,7 @@ export class SettingsService {
   }
 
   resetSettings(userId: string = 'default'): SettingsResponse {
-    this.db.query('DELETE FROM user_preferences WHERE user_id = ?').run(userId)
+    this.db.prepare('DELETE FROM user_preferences WHERE user_id = ?').run(userId)
 
     logger.info(`Reset preferences for user: ${userId}`)
 
@@ -125,7 +125,7 @@ export class SettingsService {
 
   getOpenCodeConfigs(userId: string = 'default'): OpenCodeConfigResponseWithRaw {
     const rows = this.db
-      .query('SELECT * FROM opencode_configs WHERE user_id = ? ORDER BY created_at DESC')
+      .prepare('SELECT * FROM opencode_configs WHERE user_id = ? ORDER BY created_at DESC')
       .all(userId) as Array<{
         id: number
         user_id: string
@@ -193,19 +193,19 @@ export class SettingsService {
     const now = Date.now()
 
     const existingCount = this.db
-      .query('SELECT COUNT(*) as count FROM opencode_configs WHERE user_id = ?')
+      .prepare('SELECT COUNT(*) as count FROM opencode_configs WHERE user_id = ?')
       .get(userId) as { count: number }
     
     const shouldBeDefault = request.isDefault || existingCount.count === 0
 
     if (shouldBeDefault) {
       this.db
-        .query('UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?')
+        .prepare('UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?')
         .run(userId)
     }
 
     const result = this.db
-      .query(
+      .prepare(
         `INSERT INTO opencode_configs (user_id, config_name, config_content, is_default, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?)`
       )
@@ -238,7 +238,7 @@ export class SettingsService {
     userId: string = 'default'
   ): OpenCodeConfigWithRaw | null {
     const existing = this.db
-      .query('SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?')
+      .prepare('SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?')
       .get(userId, configName) as {
         id: number
         config_content: string
@@ -263,12 +263,12 @@ export class SettingsService {
 
     if (request.isDefault) {
       this.db
-        .query('UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?')
+        .prepare('UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?')
         .run(userId)
     }
 
     this.db
-      .query(
+      .prepare(
         `UPDATE opencode_configs 
          SET config_content = ?, is_default = ?, updated_at = ?
          WHERE user_id = ? AND config_name = ?`
@@ -297,7 +297,7 @@ export class SettingsService {
 
   deleteOpenCodeConfig(configName: string, userId: string = 'default'): boolean {
     const result = this.db
-      .query('DELETE FROM opencode_configs WHERE user_id = ? AND config_name = ?')
+      .prepare('DELETE FROM opencode_configs WHERE user_id = ? AND config_name = ?')
       .run(userId, configName)
 
     const deleted = result.changes > 0
@@ -311,7 +311,7 @@ export class SettingsService {
 
   setDefaultOpenCodeConfig(configName: string, userId: string = 'default'): OpenCodeConfigWithRaw | null {
     const existing = this.db
-      .query('SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?')
+      .prepare('SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?')
       .get(userId, configName) as {
         id: number
         config_content: string
@@ -323,12 +323,12 @@ export class SettingsService {
     }
 
     this.db
-      .query('UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?')
+      .prepare('UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?')
       .run(userId)
 
     const now = Date.now()
     this.db
-      .query(
+      .prepare(
         `UPDATE opencode_configs 
          SET is_default = TRUE, updated_at = ?
          WHERE user_id = ? AND config_name = ?`
@@ -360,7 +360,7 @@ export class SettingsService {
 
   getDefaultOpenCodeConfig(userId: string = 'default'): OpenCodeConfigWithRaw | null {
     const row = this.db
-      .query('SELECT * FROM opencode_configs WHERE user_id = ? AND is_default = TRUE')
+      .prepare('SELECT * FROM opencode_configs WHERE user_id = ? AND is_default = TRUE')
       .get(userId) as {
         id: number
         config_name: string
@@ -395,7 +395,7 @@ export class SettingsService {
 
   getOpenCodeConfigByName(configName: string, userId: string = 'default'): OpenCodeConfigWithRaw | null {
     const row = this.db
-      .query('SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?')
+      .prepare('SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?')
       .get(userId, configName) as {
         id: number
         config_name: string
@@ -431,7 +431,7 @@ export class SettingsService {
 
   getOpenCodeConfigContent(configName: string, userId: string = 'default'): string | null {
     const row = this.db
-      .query('SELECT config_content FROM opencode_configs WHERE user_id = ? AND config_name = ?')
+      .prepare('SELECT config_content FROM opencode_configs WHERE user_id = ? AND config_name = ?')
       .get(userId, configName) as { config_content: string } | undefined
     
     if (!row) {
@@ -444,17 +444,17 @@ export class SettingsService {
 
   ensureSingleConfigIsDefault(userId: string = 'default'): void {
     const hasDefault = this.db
-      .query('SELECT COUNT(*) as count FROM opencode_configs WHERE user_id = ? AND is_default = TRUE')
+      .prepare('SELECT COUNT(*) as count FROM opencode_configs WHERE user_id = ? AND is_default = TRUE')
       .get(userId) as { count: number }
 
     if (hasDefault.count === 0) {
       const firstConfig = this.db
-        .query('SELECT config_name FROM opencode_configs WHERE user_id = ? ORDER BY created_at ASC LIMIT 1')
+        .prepare('SELECT config_name FROM opencode_configs WHERE user_id = ? ORDER BY created_at ASC LIMIT 1')
         .get(userId) as { config_name: string } | undefined
 
       if (firstConfig) {
         this.db
-          .query('UPDATE opencode_configs SET is_default = TRUE WHERE user_id = ? AND config_name = ?')
+          .prepare('UPDATE opencode_configs SET is_default = TRUE WHERE user_id = ? AND config_name = ?')
           .run(userId, firstConfig.config_name)
         logger.info(`Auto-set '${firstConfig.config_name}' as default (only config)`)
       }

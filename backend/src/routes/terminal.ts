@@ -38,13 +38,20 @@ export function createTerminalRoutes() {
     }
 
     const sessionId = `term-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    const session = createTerminalSession(sessionId, workdir)
     
-    return c.json({
-      id: session.id,
-      workdir: session.workdir,
-      createdAt: session.createdAt,
-    })
+    try {
+      const session = createTerminalSession(sessionId, workdir)
+      
+      return c.json({
+        id: session.id,
+        workdir: session.workdir,
+        createdAt: session.createdAt,
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      logger.error(`[Terminal] Failed to create session: ${message}`, err)
+      return c.json({ error: message }, 500)
+    }
   })
 
   app.get('/:sessionId/stream', async (c) => {

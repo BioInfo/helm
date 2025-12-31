@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { Database } from 'bun:sqlite'
+import Database from 'better-sqlite3'
 import { createHash } from 'crypto'
 import { mkdir, readFile, writeFile, readdir, stat, unlink } from 'fs/promises'
 import { join } from 'path'

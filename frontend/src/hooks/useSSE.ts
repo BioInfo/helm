@@ -8,6 +8,7 @@ import { showToast } from '@/lib/toast'
 import { settingsApi } from '@/api/settings'
 import { useSessionStatus } from '@/stores/sessionStatusStore'
 import { useMCPStore } from '@/stores/mcpStore'
+import { useObservabilityStore } from '@/stores/observabilityStore'
 
 const MAX_RECONNECT_DELAY = 30000
 const INITIAL_RECONNECT_DELAY = 1000
@@ -55,6 +56,8 @@ export const useSSE = (opcodeUrl: string | null | undefined, directory?: string)
   const [isReconnecting, setIsReconnecting] = useState(false)
   const setSessionStatus = useSessionStatus((state) => state.setStatus)
   const addOrUpdateToolCall = useMCPStore((state) => state.addOrUpdateToolCall)
+  const updateSessionUsage = useObservabilityStore((state) => state.updateSessionUsage)
+  const countedMessagesRef = useRef<Set<string>>(new Set())
 
   const scheduleReconnect = useCallback((connectFn: () => void) => {
     if (!mountedRef.current) return
@@ -183,6 +186,22 @@ export const useSSE = (opcodeUrl: string | null | undefined, directory?: string)
             const isComplete = 'completed' in info.time && info.time.completed
             if (!isComplete) {
               setSessionStatus(sessionID, { type: 'busy' })
+            }
+            
+            if (isComplete && !countedMessagesRef.current.has(info.id)) {
+              countedMessagesRef.current.add(info.id)
+              const tokens = info.tokens
+              updateSessionUsage(
+                sessionID,
+                {
+                  input: tokens.input,
+                  output: tokens.output,
+                  reasoning: tokens.reasoning,
+                  cacheRead: tokens.cache.read,
+                  cacheWrite: tokens.cache.write,
+                },
+                info.cost
+              )
             }
           }
           

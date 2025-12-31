@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import type { Database } from 'bun:sqlite'
+import type Database from 'better-sqlite3'
 import { opencodeServerManager } from '../services/opencode-single-server'
 
 export function createHealthRoutes(db: Database) {

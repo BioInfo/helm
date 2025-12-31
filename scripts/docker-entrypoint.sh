@@ -57,6 +57,6 @@ if [ "$OPENCODE_VERSION" != "unknown" ]; then
   fi
 fi
 
-echo "🚀 Starting OpenCode Manager Backend..."
+echo "🚀 Starting Helm Backend..."
 
 exec "$@"

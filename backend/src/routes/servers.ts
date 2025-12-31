@@ -1,66 +1,30 @@
 import { Hono } from 'hono'
-import { discoverServers, checkServerHealth, type OpenCodeServer } from '../discovery'
-import { logger } from '../utils/logger'
+import { discoverServers, type OpenCodeServer } from '../discovery'
 
-const CACHE_TTL_MS = 5000
+const app = new Hono()
 
-interface ServerCache {
-  servers: OpenCodeServer[]
-  timestamp: number
-}
+let cache: { servers: OpenCodeServer[]; timestamp: number } | null = null
 
-let cache: ServerCache | null = null
+app.get('/', async (c) => {
+  const now = Date.now()
+  if (!cache || now - cache.timestamp > 5000) {
+    cache = { servers: await discoverServers(), timestamp: now }
+  }
+  return c.json(cache.servers)
+})
+
+app.post('/refresh', async (c) => {
+  cache = { servers: await discoverServers(), timestamp: Date.now() }
+  return c.json(cache.servers)
+})
+
+app.get('/:id/health', async (c) => {
+  const servers = await discoverServers()
+  const server = servers.find(s => s.id === c.req.param('id'))
+  if (!server) return c.json({ error: 'Not found' }, 404)
+  return c.json({ status: server.status })
+})
 
 export function createServersRoutes() {
-  const app = new Hono()
-
-  app.get('/', async (c) => {
-    const now = Date.now()
-    
-    if (cache && (now - cache.timestamp) < CACHE_TTL_MS) {
-      logger.debug('Returning cached server list')
-      return c.json(cache.servers)
-    }
-
-    const servers = await discoverServers()
-    cache = { servers, timestamp: now }
-    return c.json(servers)
-  })
-
-  app.post('/refresh', async (c) => {
-    const servers = await discoverServers()
-    cache = { servers, timestamp: Date.now() }
-    return c.json(servers)
-  })
-
-  app.get('/:id', async (c) => {
-    const id = c.req.param('id')
-    const servers = cache?.servers ?? await discoverServers()
-    const server = servers.find(s => s.id === id)
-    
-    if (!server) {
-      return c.json({ error: 'Server not found' }, 404)
-    }
-    
-    return c.json(server)
-  })
-
-  app.get('/:id/health', async (c) => {
-    const id = c.req.param('id')
-    const servers = cache?.servers ?? await discoverServers()
-    const server = servers.find(s => s.id === id)
-    
-    if (!server) {
-      return c.json({ error: 'Server not found' }, 404)
-    }
-
-    const healthy = await checkServerHealth(server.port)
-    return c.json({ 
-      id: server.id,
-      port: server.port,
-      status: healthy ? 'healthy' : 'unhealthy' 
-    })
-  })
-
   return app
 }

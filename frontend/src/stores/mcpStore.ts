@@ -162,15 +162,19 @@ export const useMCPStore = create<MCPStoreState>((set, get) => ({
   },
 }))
 
+// Stable empty array to prevent infinite re-renders
+const EMPTY_TOOL_CALLS: MCPToolCall[] = []
+
 export const useActiveToolCallCount = (): number => {
   return useMCPStore((state) => state.activeCallIds.size)
 }
 
 export const useToolCallsForSession = (sessionId: string | undefined): MCPToolCall[] => {
   return useMCPStore((state) => {
-    if (!sessionId) return []
-    return Array.from(state.toolCalls.values())
+    if (!sessionId) return EMPTY_TOOL_CALLS
+    const calls = Array.from(state.toolCalls.values())
       .filter(c => c.sessionId === sessionId)
-      .sort((a, b) => (b.startTime || 0) - (a.startTime || 0))
+    if (calls.length === 0) return EMPTY_TOOL_CALLS
+    return calls.sort((a, b) => (b.startTime || 0) - (a.startTime || 0))
   })
 }

@@ -44,11 +44,11 @@ app.use('/*', cors({
 
 const db = initializeDatabase(DB_PATH)
 
-export const DEFAULT_AGENTS_MD = `# OpenCode Manager - Global Agent Instructions
+export const DEFAULT_AGENTS_MD = `# Helm - Global Agent Instructions
 
 ## Critical System Constraints
 
-- **DO NOT** use ports 5003 or 5551 - these are reserved for OpenCode Manager
+- **DO NOT** use ports 5003 or 5551 - these are reserved for Helm
 - **DO NOT** kill or stop processes on ports 5003 or 5551
 - **DO NOT** modify files in the \`.config/opencode\` directory unless explicitly requested
 

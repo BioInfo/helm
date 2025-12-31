@@ -23,6 +23,7 @@ import { useSettingsDialog } from "@/hooks/useSettingsDialog";
 import { useAutoScroll } from "@/hooks/useAutoScroll";
 import { useSwipeBack } from "@/hooks/useMobile";
 import { useTTS } from "@/hooks/useTTS";
+import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { useEffect, useRef, useCallback, useMemo } from "react";
 import { MessageSkeleton } from "@/components/message/MessageSkeleton";
 import { exportSession, downloadMarkdown } from "@/lib/exportSession";
@@ -81,6 +82,24 @@ export function SessionDetail() {
     sessionId,
     repoDirectory,
   );
+
+  const { cacheSessionData, cacheMessageData } = useOfflineSync({
+    serverId: opcodeUrl || '',
+    sessionId,
+    enabled: !!opcodeUrl && !!sessionId,
+  });
+
+  useEffect(() => {
+    if (session && opcodeUrl && sessionId) {
+      cacheSessionData(session);
+    }
+  }, [session, opcodeUrl, sessionId, cacheSessionData]);
+
+  useEffect(() => {
+    if (rawMessages && rawMessages.length > 0 && opcodeUrl && sessionId) {
+      cacheMessageData(rawMessages);
+    }
+  }, [rawMessages, opcodeUrl, sessionId, cacheMessageData]);
 
   const messages = useMemo(() => {
     if (!rawMessages) return undefined

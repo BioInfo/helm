@@ -1,7 +1,7 @@
 {
-  "name": "OpenCode Manager",
-  "short_name": "OpenCode",
-  "description": "AI-powered coding assistant interface",
+  "name": "Helm - OpenCode Command Center",
+  "short_name": "Helm",
+  "description": "Mobile-first command center for multiple OpenCode instances",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",

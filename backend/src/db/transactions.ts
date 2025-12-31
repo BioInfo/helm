@@ -1,4 +1,4 @@
-import type { Database } from 'bun:sqlite'
+import type Database from 'better-sqlite3'
 import { logger } from '../utils/logger'
 
 

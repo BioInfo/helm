@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog"
 import { ToolCallFeed } from "./ToolCallFeed"
 import { useActiveToolCallCount, useMCPStore } from "@/stores/mcpStore"
-import { cn } from "@/lib/utils"
 
 export function ToolsIndicator() {
   const [open, setOpen] = useState(false)

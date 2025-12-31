@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Loader2, CheckCircle2, XCircle, Clock, Wrench, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react'
+import { useShallow } from 'zustand/react/shallow'
 import { useMCPStore, useActiveToolCallCount, type MCPToolCall } from '@/stores/mcpStore'
 import { cn } from '@/lib/utils'
 
@@ -196,15 +197,19 @@ export function ToolCallFeed({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const activeCount = useActiveToolCallCount()
   
-  const calls = useMCPStore((state) => {
-    const allCalls = Array.from(state.toolCalls.values())
+  // Use useShallow to prevent infinite re-renders from array reference changes
+  const toolCallsMap = useMCPStore(useShallow((state) => state.toolCalls))
+  
+  // Derive and sort calls in useMemo to maintain stable references
+  const calls = useMemo(() => {
+    const allCalls = Array.from(toolCallsMap.values())
       .sort((a, b) => (b.startTime || 0) - (a.startTime || 0))
     
     if (sessionId) {
       return allCalls.filter(c => c.sessionId === sessionId).slice(0, maxItems)
     }
     return allCalls.slice(0, maxItems)
-  })
+  }, [toolCallsMap, sessionId, maxItems])
 
   const toggleExpanded = (id: string) => {
     setExpandedIds(prev => {
