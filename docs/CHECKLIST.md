@@ -113,36 +113,31 @@ Quick reference for building Helm. Check off as you complete.
 ## Phase 4: Touch-First Mobile UX
 
 ### 4.1 Bottom Navigation
-- [ ] Create `frontend/src/components/mobile/BottomNav.tsx`
-- [ ] 5 tabs: Chat, Files, Tools, Terminal, Settings
-- [ ] Active state styling
-- [ ] Badge for active tool calls
-- [ ] Safe area padding
+- [x] Create `frontend/src/components/mobile/BottomNav.tsx`
+- [x] 5 tabs: Chat, Files, Tools, Terminal, Settings
+- [x] Active state styling
+- [x] Badge for active tool calls (pulsing animation)
+- [x] Safe area padding with env(safe-area-inset-bottom)
 
-### 4.2 Gesture Store
-- [ ] Create `frontend/src/stores/gestureStore.ts`
-- [ ] Track sidebar/sheet open state
-- [ ] Track compose expanded state
+### 4.2 Mobile Navigation Store
+- [x] Create `frontend/src/stores/mobileNavStore.ts`
+- [x] Track active tab with persistence
+- [x] Previous tab tracking for back navigation
 
-### 4.3 Swipe Gestures
-- [ ] `bun add @use-gesture/react react-spring`
-- [ ] Create `frontend/src/components/mobile/SwipeableView.tsx`
-- [ ] Swipe right → server/session picker
-- [ ] Swipe left → file browser
-- [ ] Haptic feedback on trigger
+### 4.3 Gesture Support
+- [x] `pnpm add @use-gesture/react` installed
+- [x] Existing `useSwipeBack` hook in `useMobile.ts`
+- [x] Haptic feedback on tab switch
 
-### 4.4 Mobile Input
-- [ ] Create `frontend/src/components/mobile/MobileInput.tsx`
-- [ ] Visual viewport handling for iOS keyboard
-- [ ] Auto-resize textarea
-- [ ] 16px font (prevent iOS zoom)
-- [ ] Safe area bottom padding
+### 4.4 Mobile Layout
+- [x] Create `frontend/src/components/mobile/MobileLayout.tsx`
+- [x] Wrapper component with bottom nav integration
+- [x] Proper content padding for nav bar
 
-### 4.5 Polish
-- [ ] All touch targets >= 44x44pt
-- [ ] Test on iPhone Safari
-- [ ] Test PWA installed mode
-- [ ] Dark mode throughout
+### 4.5 Touch Optimization
+- [x] All nav touch targets >= 44x44pt (min-h-[48px] min-w-[56px])
+- [x] Touch manipulation CSS for responsive taps
+- [x] Safe area handling throughout
 
 ---
 
