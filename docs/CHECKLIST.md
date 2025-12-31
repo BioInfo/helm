@@ -82,25 +82,31 @@ Quick reference for building Helm. Check off as you complete.
 ## Phase 3: Embedded Terminal
 
 ### 3.1 Dependencies
-- [ ] `bun add xterm xterm-addon-fit`
+- [x] `pnpm add @xterm/xterm @xterm/addon-fit` (frontend)
+- [x] `pnpm add node-pty` (backend)
 
 ### 3.2 Terminal Backend
-- [ ] Create `backend/src/routes/terminal.ts`
-- [ ] `GET /api/terminal/:serverId/stream` — SSE output
-- [ ] `POST /api/terminal/:serverId/input` — send keystrokes
-- [ ] PTY or named pipe to OpenCode process
+- [x] Create `backend/src/services/terminal.ts` - PTY session management
+- [x] Create `backend/src/routes/terminal.ts`
+- [x] `POST /api/terminal/create` — create terminal session
+- [x] `GET /api/terminal/:sessionId/stream` — SSE output (base64)
+- [x] `POST /api/terminal/:sessionId/input` — send keystrokes
+- [x] `POST /api/terminal/:sessionId/resize` — resize terminal
+- [x] `DELETE /api/terminal/:sessionId` — close session
+- [x] PTY via node-pty with auto-cleanup
 
 ### 3.3 Terminal Component
-- [ ] Create `frontend/src/components/terminal/TerminalView.tsx`
-- [ ] Initialize Xterm.js with fit addon
-- [ ] Connect to SSE stream
-- [ ] Send input on keypress
-- [ ] Handle resize
+- [x] Create `frontend/src/components/terminal/TerminalView.tsx`
+- [x] Initialize Xterm.js with fit addon
+- [x] Connect to SSE stream
+- [x] Send input on keypress
+- [x] Handle resize
+- [x] Tokyo Night theme styling
 
 ### 3.4 Integration
-- [ ] Add "Terminal" tab to navigation
-- [ ] Server selector within terminal view
-- [ ] Mobile-optimized font size
+- [x] Add "Terminal" indicator to header navigation
+- [x] Server context awareness (uses selected server's workdir)
+- [x] Mobile-optimized with safe area padding
 
 ---
 

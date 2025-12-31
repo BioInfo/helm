@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
 import { ServerIndicator } from "@/components/servers";
 import { ToolsIndicator } from "@/components/mcp";
+import { TerminalIndicator } from "@/components/terminal";
 import { useSettingsDialog } from "@/hooks/useSettingsDialog";
 import { useTheme } from "@/hooks/useTheme";
 import type { ReactNode } from "react";
@@ -39,6 +40,7 @@ export function Header({ title, backTo, action }: HeaderProps) {
           </div>
           <div className="flex items-center gap-2">
             <ToolsIndicator />
+            <TerminalIndicator />
             <ServerIndicator />
             {action && <div>{action}</div>}
             <Button
