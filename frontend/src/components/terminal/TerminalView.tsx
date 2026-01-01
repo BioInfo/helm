@@ -30,12 +30,29 @@ export function TerminalView({ serverId, workdir, className, onClose }: Terminal
   
   const [status, setStatus] = useState<'connecting' | 'connected' | 'error' | 'closed'>('connecting')
   const [error, setError] = useState<string | null>(null)
+  const reconnectAttemptsRef = useRef(0)
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const MAX_RECONNECT_ATTEMPTS = 5
+
+  // Unicode-safe base64 encoding (btoa fails with non-ASCII)
+  const encodeBase64 = useCallback((str: string): string => {
+    const bytes = new TextEncoder().encode(str)
+    const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join('')
+    return btoa(binString)
+  }, [])
+
+  // Unicode-safe base64 decoding
+  const decodeBase64 = useCallback((base64: string): string => {
+    const binString = atob(base64)
+    const bytes = Uint8Array.from(binString, (m) => m.codePointAt(0)!)
+    return new TextDecoder().decode(bytes)
+  }, [])
 
   const sendInput = useCallback(async (data: string) => {
     if (!sessionRef.current) return
     
     try {
-      const base64Data = btoa(data)
+      const base64Data = encodeBase64(data)
       await fetch(`${API_BASE}/${sessionRef.current.id}/input`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -44,7 +61,7 @@ export function TerminalView({ serverId, workdir, className, onClose }: Terminal
     } catch (err) {
       console.error('Failed to send terminal input:', err)
     }
-  }, [])
+  }, [encodeBase64])
 
   const sendResize = useCallback(async (cols: number, rows: number) => {
     if (!sessionRef.current) return
@@ -87,6 +104,8 @@ export function TerminalView({ serverId, workdir, className, onClose }: Terminal
 
       eventSource.addEventListener('connected', () => {
         setStatus('connected')
+        reconnectAttemptsRef.current = 0
+        setError(null)
         
         if (fitAddonRef.current && terminalRef.current) {
           fitAddonRef.current.fit()
@@ -96,27 +115,40 @@ export function TerminalView({ serverId, workdir, className, onClose }: Terminal
 
       eventSource.addEventListener('output', (event) => {
         if (terminalRef.current) {
-          const data = atob(event.data)
+          const data = decodeBase64(event.data)
           terminalRef.current.write(data)
         }
       })
 
-      eventSource.addEventListener('error', () => {
-        setStatus('error')
-        setError('Connection lost')
-      })
-
-      eventSource.onerror = () => {
-        setStatus('error')
-        setError('Connection lost')
+      const handleConnectionError = () => {
+        if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+          reconnectAttemptsRef.current++
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current - 1), 10000)
+          setStatus('connecting')
+          setError(`Reconnecting (${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})...`)
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connect()
+          }, delay)
+        } else {
+          setStatus('error')
+          setError('Connection lost after multiple attempts')
+        }
       }
+
+      eventSource.addEventListener('error', handleConnectionError)
+      eventSource.onerror = handleConnectionError
     } catch (err) {
       setStatus('error')
       setError(err instanceof Error ? err.message : 'Failed to connect')
     }
-  }, [serverId, workdir, sendResize])
+  }, [serverId, workdir, sendResize, decodeBase64])
 
   const disconnect = useCallback(async () => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current)
+      reconnectTimeoutRef.current = null
+    }
+    
     if (eventSourceRef.current) {
       eventSourceRef.current.close()
       eventSourceRef.current = null

@@ -100,6 +100,17 @@ export function createTerminalRoutes() {
 
       while (!closed) {
         await new Promise(resolve => setTimeout(resolve, 30000))
+        
+        const currentSession = getTerminalSession(sessionId)
+        if (!currentSession || !currentSession.alive) {
+          closed = true
+          await stream.writeSSE({
+            event: 'closed',
+            data: JSON.stringify({ reason: 'Session ended' }),
+          })
+          break
+        }
+        
         if (!closed) {
           await stream.writeSSE({
             event: 'ping',

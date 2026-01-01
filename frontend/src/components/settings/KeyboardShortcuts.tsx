@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSettings } from '@/hooks/useSettings'
 import { Loader2 } from 'lucide-react'
 import { DEFAULT_KEYBOARD_SHORTCUTS } from '@/api/types/settings'
@@ -17,8 +17,10 @@ export function KeyboardShortcuts() {
   const [currentKeys, setCurrentKeys] = useState<string>('')
 
   const shortcuts = { ...DEFAULT_KEYBOARD_SHORTCUTS, ...preferences?.keyboardShortcuts, ...tempShortcuts }
+  const shortcutsRef = useRef(shortcuts)
+  shortcutsRef.current = shortcuts
 
-  const handleKeyDown = (e: KeyboardEvent, action: string) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent, action: string) => {
     e.preventDefault()
     
     const keys = []
@@ -54,21 +56,19 @@ export function KeyboardShortcuts() {
         setCurrentKeys('')
         
         updateSettings({
-          keyboardShortcuts: { ...shortcuts, [action]: shortcut }
+          keyboardShortcuts: { ...shortcutsRef.current, [action]: shortcut }
         })
       }
     } else {
-      // Show current modifier keys being held
       setCurrentKeys(keys.join('+'))
     }
-  }
+  }, [updateSettings])
 
-  const handleKeyUp = (e: KeyboardEvent) => {
-    // Clear current keys display when modifiers are released
+  const handleKeyUp = useCallback((e: KeyboardEvent) => {
     if (['Control', 'Meta', 'Alt', 'Shift'].includes(e.key)) {
       setCurrentKeys('')
     }
-  }
+  }, [])
 
   const startRecording = (action: string) => {
     setRecordingKey(action)

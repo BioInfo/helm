@@ -5,7 +5,7 @@ import { DeleteDialog } from "@/components/ui/delete-dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Loader2, GitBranch, Search, Trash2, MoreVertical, Info, X, HelpCircle } from "lucide-react";
+import { Loader2, GitBranch, Search, Trash2, MoreVertical, X, HelpCircle } from "lucide-react";
 import { RepoCard } from "./RepoCard";
 
 const HELP_DISMISSED_KEY = "helm-repo-help-dismissed";

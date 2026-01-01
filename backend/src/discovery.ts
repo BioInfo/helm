@@ -52,10 +52,13 @@ export async function discoverServers(): Promise<OpenCodeServer[]> {
 
         let workdir = 'unknown'
         try {
-          const { stdout: cwdOut } = await execAsync(`lsof -p ${pid} | grep " cwd " | awk '{print $9}'`)
-          const possiblePath = cwdOut.trim()
-          if (possiblePath && possiblePath.startsWith('/')) {
-            workdir = possiblePath
+          const { stdout: cwdOut } = await execAsync(`lsof -p ${pid} -a -d cwd -F n 2>/dev/null`)
+          const lines = cwdOut.split('\n')
+          for (const line of lines) {
+            if (line.startsWith('n/')) {
+              workdir = line.slice(1)
+              break
+            }
           }
         } catch (err) {
           logger.warn(`Failed to get cwd for pid ${pid}`, err)

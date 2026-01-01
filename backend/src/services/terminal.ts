@@ -188,8 +188,9 @@ export function createTerminalSession(sessionId: string, workdir: string): Termi
       }
     }
     
-    // Don't immediately delete - allow reconnection
-    // Cleanup will handle it after timeout
+    // Clear subscribers after notifying them - prevents memory leak
+    // Dead sessions with no subscribers will be cleaned up by interval
+    session.subscribers.clear()
   })
 
   sessions.set(sessionId, session)

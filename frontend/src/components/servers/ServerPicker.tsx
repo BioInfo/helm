@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useCallback } from "react"
 import { RefreshCw, ServerOff, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ServerCard } from "./ServerCard"
@@ -22,7 +22,7 @@ export function ServerPicker({ onServerSelect }: ServerPickerProps) {
   
   const selectedServer = useSelectedServer()
 
-  const fetchServers = async (refresh = false) => {
+  const fetchServers = useCallback(async (refresh = false) => {
     setLoading(true)
     try {
       const endpoint = refresh ? '/api/servers/refresh' : '/api/servers'
@@ -38,11 +38,11 @@ export function ServerPicker({ onServerSelect }: ServerPickerProps) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch servers')
     }
-  }
+  }, [setLoading, setServers, setError])
 
   useEffect(() => {
     fetchServers()
-  }, [])
+  }, [fetchServers])
 
   const handleServerSelect = (serverId: string) => {
     selectServer(serverId)

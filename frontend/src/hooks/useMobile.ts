@@ -38,7 +38,7 @@ export function useSwipeBack(
   options: SwipeBackOptions = {}
 ) {
   const {
-    threshold = 80,
+    threshold = 60,
     edgeWidth = 30,
     enabled = true,
     onSwipeStart,

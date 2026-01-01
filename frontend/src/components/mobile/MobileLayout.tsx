@@ -21,7 +21,7 @@ export function MobileLayout({ children, hideBottomNav = false, className }: Mob
       <div 
         className="flex-1 overflow-auto"
         style={{ 
-          paddingBottom: hideBottomNav ? 'env(safe-area-inset-bottom, 0px)' : 'calc(56px + env(safe-area-inset-bottom, 0px))' 
+          paddingBottom: hideBottomNav ? 'env(safe-area-inset-bottom, 0px)' : 'calc(48px + env(safe-area-inset-bottom, 0px))' 
         }}
       >
         {children}

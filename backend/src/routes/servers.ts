@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { discoverServers, type OpenCodeServer } from '../discovery'
 import { logger } from '../utils/logger'
 
@@ -65,7 +66,7 @@ app.get('/:id/config', async (c) => {
       return c.json({ 
         error: 'Failed to fetch config from server',
         status: response.status 
-      }, response.status)
+      }, response.status as ContentfulStatusCode)
     }
     
     const config = await response.json()
@@ -95,7 +96,7 @@ app.get('/:id/mcp', async (c) => {
       return c.json({ 
         error: 'Failed to fetch MCP status from server',
         status: response.status 
-      }, response.status)
+      }, response.status as ContentfulStatusCode)
     }
     
     const mcpStatus = await response.json()
@@ -125,7 +126,7 @@ app.post('/:id/mcp/:name/connect', async (c) => {
     
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown error' }))
-      return c.json(error, response.status)
+      return c.json(error, response.status as ContentfulStatusCode)
     }
     
     return c.json({ success: true })
@@ -149,7 +150,7 @@ app.post('/:id/mcp/:name/disconnect', async (c) => {
     
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown error' }))
-      return c.json(error, response.status)
+      return c.json(error, response.status as ContentfulStatusCode)
     }
     
     return c.json({ success: true })
@@ -173,7 +174,7 @@ app.post('/:id/mcp/:name/auth/authenticate', async (c) => {
     
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown error' }))
-      return c.json(error, response.status)
+      return c.json(error, response.status as ContentfulStatusCode)
     }
     
     return c.json(await response.json())

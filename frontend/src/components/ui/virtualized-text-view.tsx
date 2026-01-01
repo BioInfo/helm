@@ -316,6 +316,7 @@ export const VirtualizedTextView = forwardRef<VirtualizedTextViewHandle, Virtual
     const range = calculateVisibleRange(scrollTopRef.current)
     currentVisibleRangeRef.current = range
     return range
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [calculateVisibleRange, renderTrigger])
   
   useEffect(() => {

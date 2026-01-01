@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight, Server, FolderGit2, Terminal, Wrench, Wifi, AlertCircle, ExternalLink } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface FaqItem {
   question: string

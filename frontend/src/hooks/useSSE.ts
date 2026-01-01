@@ -83,6 +83,7 @@ export const useSSE = (opcodeUrl: string | null | undefined, directory?: string)
 
   useEffect(() => {
     mountedRef.current = true
+    const countedMessages = countedMessagesRef.current
     
     if (!client) {
       if (eventSourceRef.current) {
@@ -120,9 +121,11 @@ export const useSSE = (opcodeUrl: string | null | undefined, directory?: string)
         case 'session.deleted':
           queryClient.invalidateQueries({ queryKey: ['opencode', 'sessions', opcodeUrl, directory] })
           if ('sessionID' in event.properties) {
+            const deletedSessionId = event.properties.sessionID
             queryClient.invalidateQueries({ 
-              queryKey: ['opencode', 'session', opcodeUrl, event.properties.sessionID, directory] 
+              queryKey: ['opencode', 'session', opcodeUrl, deletedSessionId, directory] 
             })
+            useMCPStore.getState().clearSessionCalls(deletedSessionId)
           }
           break
 
@@ -475,8 +478,9 @@ export const useSSE = (opcodeUrl: string | null | undefined, directory?: string)
         eventSourceRef.current = null
         setIsConnected(false)
       }
+      countedMessages.clear()
     }
-  }, [client, queryClient, opcodeUrl, directory, scheduleReconnect, resetReconnectDelay, setSessionStatus])
+  }, [client, queryClient, opcodeUrl, directory, scheduleReconnect, resetReconnectDelay, setSessionStatus, addOrUpdateToolCall, updateSessionUsage])
 
   return { isConnected, error, isReconnecting }
 }

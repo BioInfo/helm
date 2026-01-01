@@ -53,20 +53,24 @@ function parseToolPart(part: ToolPart, serverId?: string, serverName?: string): 
     input: state.input || {},
   }
 
-  if (state.status === 'running' && 'time' in state) {
-    baseCall.startTime = state.time.start
-    baseCall.title = state.title
-  } else if (state.status === 'completed' && 'time' in state) {
-    baseCall.startTime = state.time.start
-    baseCall.endTime = state.time.end
-    baseCall.duration = state.time.end - state.time.start
-    baseCall.output = state.output
-    baseCall.title = state.title
-  } else if (state.status === 'error' && 'time' in state) {
-    baseCall.startTime = state.time.start
-    baseCall.endTime = state.time.end
-    baseCall.duration = state.time.end - state.time.start
-    baseCall.error = state.error
+  const hasTime = 'time' in state && state.time && typeof state.time === 'object'
+
+  if (state.status === 'running' && hasTime) {
+    baseCall.startTime = (state.time as { start: number }).start
+    baseCall.title = (state as { title?: string }).title
+  } else if (state.status === 'completed' && hasTime) {
+    const time = state.time as { start: number; end: number }
+    baseCall.startTime = time.start
+    baseCall.endTime = time.end
+    baseCall.duration = time.end - time.start
+    baseCall.output = (state as { output?: string }).output
+    baseCall.title = (state as { title?: string }).title
+  } else if (state.status === 'error' && hasTime) {
+    const time = state.time as { start: number; end: number }
+    baseCall.startTime = time.start
+    baseCall.endTime = time.end
+    baseCall.duration = time.end - time.start
+    baseCall.error = (state as { error?: string }).error
   }
 
   return baseCall
@@ -92,8 +96,11 @@ export const useMCPStore = create<MCPStoreState>((set, get) => ({
       }
       
       if (newCalls.size > MAX_STORED_CALLS) {
-        const sortedKeys = Array.from(newCalls.keys())
-        const keysToRemove = sortedKeys.slice(0, newCalls.size - MAX_STORED_CALLS)
+        const sortedByTime = Array.from(newCalls.entries())
+          .sort((a, b) => (a[1].startTime || 0) - (b[1].startTime || 0))
+        const keysToRemove = sortedByTime
+          .slice(0, newCalls.size - MAX_STORED_CALLS)
+          .map(([key]) => key)
         keysToRemove.forEach(key => {
           newCalls.delete(key)
           newActiveIds.delete(key)
