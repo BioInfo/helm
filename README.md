@@ -31,7 +31,9 @@ Helm is a fork of [chriswritescode-dev/opencode-web](https://github.com/chriswri
 
 ## Quick Start
 
-### Local Development
+### Native (Recommended)
+
+Run Helm directly on your Mac to discover all local OpenCode instances:
 
 ```bash
 # Clone
@@ -47,22 +49,38 @@ pnpm dev
 # Open http://localhost:5001
 ```
 
-### With Tailscale
+Then start OpenCode in your project directories:
+```bash
+cd ~/project-api && opencode          # TUI mode - Helm will find it
+cd ~/project-frontend && opencode serve  # Headless - Helm will find it
+cd ~/project-infra && opencode        # TUI mode - Helm will find it
+```
+
+Helm auto-discovers all running instances and lets you switch between them.
+
+### With Tailscale (Mobile Access)
 
 ```bash
 # On your Mac
 pnpm dev
 
-# On your iPhone
+# On your iPhone via Tailscale
 # Navigate to http://your-mac.tailnet:5001
 ```
 
-### With Docker
+### With Docker (Isolated/Single-Server)
+
+Docker mode runs a single embedded OpenCode instance. Use this for:
+- Isolated environments
+- Self-hosted deployments
+- Users who don't need multi-server discovery
 
 ```bash
 docker-compose up -d
 # Access at http://localhost:5003
 ```
+
+> **Note:** Docker cannot discover OpenCode instances on the host machine due to process isolation. For multi-server discovery, run Helm natively.
 
 ## Features
 
@@ -84,16 +102,27 @@ docker-compose up -d
 - **Offline mode** — IndexedDB caching + message queue
 - **Touch gestures** — Swipe-to-go-back, haptic feedback
 
-## Use Case
+## Roadmap
 
-Run multiple OpenCode instances:
-```bash
-cd ~/work/api && opencode          # TUI mode
-cd ~/work/frontend && opencode serve  # Headless
-cd ~/work/infra && opencode        # TUI mode
-```
+### Current (v0.1)
+- [x] Multi-server discovery (local via lsof)
+- [x] Server switching UI
+- [x] Embedded terminal
+- [x] MCP tool visibility
+- [x] Mobile-first UX
+- [x] Docker deployment option
 
-Helm finds them all. Switch between projects with a tap. See tool calls in real-time. All from your iPhone.
+### Planned (v0.2)
+- [ ] **Multi-machine discovery** — See OpenCode across Mac, DGX, Pi, cloud servers
+- [ ] Network-based server registration
+- [ ] SSH tunnel support for remote instances
+- [ ] Server grouping by machine/location
+
+### Future
+- [ ] Swarm task visualization
+- [ ] Cost budgets and alerts
+- [ ] Session sharing/collaboration
+- [ ] Custom MCP server templates
 
 ## Documentation
 
@@ -103,46 +132,29 @@ Helm finds them all. Switch between projects with a tap. See tool calls in real-
 | [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Implementation progress tracker |
 | [AGENTS.md](./AGENTS.md) | Development context for AI agents |
 
-## Dev Server Ports
+## Troubleshooting
 
-The Docker container exposes ports `5100-5103` for running dev servers inside your repositories:
-
-```yaml
-ports:
-  - "5003:5003"      # Helm
-  - "5100:5100"      # Dev server 1
-  - "5101:5101"      # Dev server 2
-  - "5102:5102"      # Dev server 3
-  - "5103:5103"      # Dev server 4
-```
-
-
-## Troubleshooting & Testing
-
-### Apple Silicon (M1/M2/M3/M4) Fixes
+### Apple Silicon (M1/M2/M3/M4)
 
 If you see `posix_spawnp failed` errors when opening a terminal:
 
-1. **Rebuild node-pty for ARM64:**
-   ```bash
-   cd node_modules/.pnpm/node-pty@1.1.0/node_modules/node-pty
-   npx node-gyp rebuild
-   ```
-2. **Restart the backend:**
-   Kill the `bun` process running the backend and restart `pnpm dev`.
-
-### Quick Test Script
-
-Verify terminal functionality without the UI:
-
 ```bash
-./scripts/test-terminal.sh
+cd node_modules/.pnpm/node-pty@1.1.0/node_modules/node-pty
+npx node-gyp rebuild
 ```
 
-### Manual API Test
+Then restart with `pnpm dev`.
+
+### Verify Server Discovery
 
 ```bash
-# Create terminal
+# Check what OpenCode instances Helm can see
+curl http://localhost:5001/api/servers | jq .
+```
+
+### Test Terminal API
+
+```bash
 curl -X POST http://localhost:5001/api/terminal/create \
   -H "Content-Type: application/json" \
   -d '{"workdir": "/tmp"}'
