@@ -11,6 +11,38 @@ export interface OpenCodeServer {
   projectName?: string
 }
 
+export interface ServerConfigResponse {
+  serverId: string
+  projectName: string
+  workdir: string
+  config: {
+    mcp?: Record<string, McpServerConfig>
+    agents?: Record<string, unknown>
+    commands?: Record<string, unknown>
+    [key: string]: unknown
+  }
+}
+
+export interface McpServerConfig {
+  type?: 'local' | 'remote'
+  enabled?: boolean
+  command?: string[]
+  url?: string
+  environment?: Record<string, string>
+  timeout?: number
+}
+
+export interface ServerMcpStatusResponse {
+  serverId: string
+  projectName: string
+  status: Record<string, McpStatus>
+}
+
+export interface McpStatus {
+  status: 'connected' | 'disabled' | 'failed' | 'needs_auth' | 'needs_client_registration'
+  error?: string
+}
+
 interface ServerStore {
   servers: OpenCodeServer[]
   selectedServerId: string | null

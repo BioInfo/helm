@@ -4,9 +4,10 @@ import { HelpFaq } from '@/components/settings/HelpFaq'
 import { KeyboardShortcuts } from '@/components/settings/KeyboardShortcuts'
 import { OpenCodeConfigManager } from '@/components/settings/OpenCodeConfigManager'
 import { ProviderSettings } from '@/components/settings/ProviderSettings'
+import { ServerMcpViewer } from '@/components/settings/ServerMcpViewer'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Settings2, Keyboard, Code, ChevronLeft, X, Key, HelpCircle } from 'lucide-react'
+import { Settings2, Keyboard, Code, ChevronLeft, X, Key, HelpCircle, Server } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSwipeBack } from '@/hooks/useMobile'
 import { useSettingsDialog } from '@/hooks/useSettingsDialog'
@@ -16,7 +17,7 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-type SettingsView = 'menu' | 'general' | 'shortcuts' | 'opencode' | 'providers' | 'help'
+type SettingsView = 'menu' | 'general' | 'shortcuts' | 'opencode' | 'servers' | 'providers' | 'help'
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { defaultTab, clearDefaultTab } = useSettingsDialog()
@@ -53,6 +54,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     { id: 'general', icon: Settings2, label: 'General Settings', description: 'App preferences and behavior' },
     { id: 'shortcuts', icon: Keyboard, label: 'Keyboard Shortcuts', description: 'Customize keyboard shortcuts' },
     { id: 'opencode', icon: Code, label: 'OpenCode Config', description: 'Manage OpenCode configurations, commands, and agents' },
+    { id: 'servers', icon: Server, label: 'Active Servers', description: 'View MCP servers from discovered OpenCode instances' },
     { id: 'providers', icon: Key, label: 'Providers', description: 'Manage AI provider API keys' },
     { id: 'help', icon: HelpCircle, label: 'Help & FAQ', description: 'Learn how Helm works and troubleshoot issues' },
   ]
@@ -78,7 +80,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           </div>
           <Tabs value={desktopTab} onValueChange={setDesktopTab} className="w-full flex flex-col flex-1 min-h-0">
             <div className="px-6 pt-6 pb-4 flex-shrink-0">
-              <TabsList className="grid w-full grid-cols-5 bg-card border border-border p-1">
+              <TabsList className="grid w-full grid-cols-6 bg-card border border-border p-1">
                 <TabsTrigger value="general" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-muted-foreground transition-all duration-200">
                   General
                 </TabsTrigger>
@@ -87,6 +89,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </TabsTrigger>
                 <TabsTrigger value="opencode" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-muted-foreground transition-all duration-200">
                   OpenCode
+                </TabsTrigger>
+                <TabsTrigger value="servers" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-muted-foreground transition-all duration-200">
+                  Servers
                 </TabsTrigger>
                 <TabsTrigger value="providers" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-muted-foreground transition-all duration-200">
                   Providers
@@ -102,6 +107,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <TabsContent value="general" className="mt-0"><GeneralSettings /></TabsContent>
                 <TabsContent value="shortcuts" className="mt-0"><KeyboardShortcuts /></TabsContent>
                 <TabsContent value="opencode" className="mt-0"><OpenCodeConfigManager /></TabsContent>
+                <TabsContent value="servers" className="mt-0"><ServerMcpViewer /></TabsContent>
                 <TabsContent value="providers" className="mt-0"><ProviderSettings /></TabsContent>
                 <TabsContent value="help" className="mt-0"><HelpFaq /></TabsContent>
               </div>
@@ -162,6 +168,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             {mobileView === 'general' && <GeneralSettings />}
             {mobileView === 'shortcuts' && <KeyboardShortcuts />}
             {mobileView === 'opencode' && <OpenCodeConfigManager />}
+            {mobileView === 'servers' && <ServerMcpViewer />}
             {mobileView === 'providers' && <ProviderSettings />}
             {mobileView === 'help' && <HelpFaq />}
           </div>
