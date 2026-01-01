@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { GitChangesPanel } from './GitChangesPanel'
 import { FileDiffView } from './FileDiffView'
 import { FilePreviewDialog } from './FilePreviewDialog'
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { X, GitBranch } from 'lucide-react'
 import { useMobile, useSwipeBack } from '@/hooks/useMobile'
 import { useQueryClient } from '@tanstack/react-query'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 interface GitChangesSheetProps {
   isOpen: boolean
@@ -77,6 +78,9 @@ export function GitChangesSheet({ isOpen, onClose, repoId, currentBranch, repoLo
         hideCloseButton
         style={swipeStyles}
       >
+        <VisuallyHidden>
+          <DialogTitle>Git Changes for {currentBranch}</DialogTitle>
+        </VisuallyHidden>
         <div className="flex items-center justify-between px-4 sm:py-3 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-2">
             <GitBranch className="w-4 h-4 text-foreground" />

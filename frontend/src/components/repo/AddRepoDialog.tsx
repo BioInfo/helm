@@ -4,7 +4,7 @@ import { createRepo } from '@/api/repos'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Info } from 'lucide-react'
 
 interface AddRepoDialogProps {
   open: boolean
@@ -51,6 +51,15 @@ export function AddRepoDialog({ open, onOpenChange }: AddRepoDialogProps) {
             Add Repository
           </DialogTitle>
         </DialogHeader>
+        
+        <div className="flex items-start gap-2 p-3 bg-zinc-900 border border-zinc-700 rounded-lg mt-2">
+          <Info className="w-4 h-4 text-zinc-400 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-zinc-400">
+            Repositories are cloned into Helm's workspace folder, separate from your existing projects.
+            To work with an existing project, run <code className="px-1 py-0.5 bg-zinc-800 rounded text-zinc-300">opencode</code> in that directory instead.
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
             <label className="text-sm text-zinc-400">Repository Type</label>

@@ -87,12 +87,23 @@ export function ServerPicker({ onServerSelect }: ServerPickerProps) {
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : servers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <ServerOff className="w-10 h-10 text-muted-foreground/50 mb-2" />
-            <p className="text-sm text-muted-foreground">No OpenCode servers found</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">
-              Start an OpenCode instance to see it here
-            </p>
+          <div className="flex flex-col items-center justify-center py-8 text-center px-4">
+            <ServerOff className="w-10 h-10 text-muted-foreground/50 mb-3" />
+            <p className="text-sm text-muted-foreground font-medium">No OpenCode servers found</p>
+            <div className="text-xs text-muted-foreground/70 mt-2 space-y-1.5 max-w-[280px]">
+              <p>
+                Helm discovers running OpenCode instances via <code className="px-1 py-0.5 bg-muted rounded text-[10px]">lsof</code>.
+              </p>
+              <p>
+                Start OpenCode in any project directory:
+              </p>
+              <code className="block px-2 py-1.5 bg-muted rounded text-[10px] font-mono">
+                cd ~/your-project && opencode
+              </code>
+              <p className="text-muted-foreground/50 pt-1">
+                Discovery refreshes every ~5 seconds
+              </p>
+            </div>
           </div>
         ) : (
           servers.map((server) => (

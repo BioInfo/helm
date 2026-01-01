@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listRepos, deleteRepo } from "@/api/repos";
 import { DeleteDialog } from "@/components/ui/delete-dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Loader2, GitBranch, Search, Trash2, MoreVertical } from "lucide-react";
+import { Loader2, GitBranch, Search, Trash2, MoreVertical, Info, X, HelpCircle } from "lucide-react";
 import { RepoCard } from "./RepoCard";
+
+const HELP_DISMISSED_KEY = "helm-repo-help-dismissed";
 
 export function RepoList() {
   const queryClient = useQueryClient();
@@ -14,6 +16,12 @@ export function RepoList() {
   const [repoToDelete, setRepoToDelete] = useState<number | null>(null);
   const [selectedRepos, setSelectedRepos] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem(HELP_DISMISSED_KEY);
+    setShowHelp(!dismissed);
+  }, []);
 
   const {
     data: repos,
@@ -128,9 +136,47 @@ export function RepoList() {
   };
 
 
+  const dismissHelp = () => {
+    setShowHelp(false);
+    localStorage.setItem(HELP_DISMISSED_KEY, "true");
+  };
+
   return (
     <>
       <div className="px-0 py-2 md:p-4">
+        {showHelp && (
+          <div className="mx-2 md:mx-0 mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <HelpCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-blue-900 dark:text-blue-100 font-medium mb-1">
+                  About Workspace Repos
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  Repositories here are cloned into Helm's workspace folder. They're separate from your local projects where OpenCode instances run.
+                  To work with existing projects, start <code className="px-1 py-0.5 bg-blue-100 dark:bg-blue-900 rounded">opencode</code> in that directory — Helm will discover it automatically.
+                </p>
+                <button 
+                  onClick={() => {
+                    // Open settings help tab - dispatch custom event
+                    window.dispatchEvent(new CustomEvent('helm:open-help'));
+                  }}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1.5 inline-block"
+                >
+                  Learn more in Help & FAQ →
+                </button>
+              </div>
+              <button 
+                onClick={dismissHelp}
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 p-1"
+                aria-label="Dismiss help"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 mb-4 md:mb-6 px-2 md:px-0">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />

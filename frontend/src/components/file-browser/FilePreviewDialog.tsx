@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { FilePreview } from './FilePreview'
 import { Loader2, FileText } from 'lucide-react'
 import { API_BASE_URL } from '@/config'
 import type { FileInfo } from '@/types/files'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 interface FilePreviewDialogProps {
   isOpen: boolean
@@ -62,6 +63,11 @@ export function FilePreviewDialog({ isOpen, onClose, filePath, repoBasePath, onF
         className="w-screen h-screen max-w-none max-h-none p-0 bg-background border-0 flex flex-col"
         hideCloseButton
       >
+        <VisuallyHidden>
+          <DialogHeader>
+            <DialogTitle>File Preview: {filePath}</DialogTitle>
+          </DialogHeader>
+        </VisuallyHidden>
         <div className="flex-1 overflow-hidden min-h-0">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">

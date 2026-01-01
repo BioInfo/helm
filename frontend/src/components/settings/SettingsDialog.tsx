@@ -1,24 +1,36 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { GeneralSettings } from '@/components/settings/GeneralSettings'
+import { HelpFaq } from '@/components/settings/HelpFaq'
 import { KeyboardShortcuts } from '@/components/settings/KeyboardShortcuts'
 import { OpenCodeConfigManager } from '@/components/settings/OpenCodeConfigManager'
 import { ProviderSettings } from '@/components/settings/ProviderSettings'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Settings2, Keyboard, Code, ChevronLeft, X, Key } from 'lucide-react'
+import { Settings2, Keyboard, Code, ChevronLeft, X, Key, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSwipeBack } from '@/hooks/useMobile'
+import { useSettingsDialog } from '@/hooks/useSettingsDialog'
 
 interface SettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-type SettingsView = 'menu' | 'general' | 'shortcuts' | 'opencode' | 'providers'
+type SettingsView = 'menu' | 'general' | 'shortcuts' | 'opencode' | 'providers' | 'help'
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+  const { defaultTab, clearDefaultTab } = useSettingsDialog()
   const [mobileView, setMobileView] = useState<SettingsView>('menu')
+  const [desktopTab, setDesktopTab] = useState<string>('general')
   const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (open && defaultTab) {
+      setDesktopTab(defaultTab)
+      setMobileView(defaultTab)
+      clearDefaultTab()
+    }
+  }, [open, defaultTab, clearDefaultTab])
 
   const handleSwipeBack = useCallback(() => {
     if (mobileView === 'menu') {
@@ -42,6 +54,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     { id: 'shortcuts', icon: Keyboard, label: 'Keyboard Shortcuts', description: 'Customize keyboard shortcuts' },
     { id: 'opencode', icon: Code, label: 'OpenCode Config', description: 'Manage OpenCode configurations, commands, and agents' },
     { id: 'providers', icon: Key, label: 'Providers', description: 'Manage AI provider API keys' },
+    { id: 'help', icon: HelpCircle, label: 'Help & FAQ', description: 'Learn how Helm works and troubleshoot issues' },
   ]
 
   const handleClose = () => {
@@ -63,9 +76,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               Settings
             </h2>
           </div>
-          <Tabs defaultValue="general" className="w-full flex flex-col flex-1 min-h-0">
+          <Tabs value={desktopTab} onValueChange={setDesktopTab} className="w-full flex flex-col flex-1 min-h-0">
             <div className="px-6 pt-6 pb-4 flex-shrink-0">
-              <TabsList className="grid w-full grid-cols-4 bg-card border border-border p-1">
+              <TabsList className="grid w-full grid-cols-5 bg-card border border-border p-1">
                 <TabsTrigger value="general" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-muted-foreground transition-all duration-200">
                   General
                 </TabsTrigger>
@@ -78,6 +91,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <TabsTrigger value="providers" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-muted-foreground transition-all duration-200">
                   Providers
                 </TabsTrigger>
+                <TabsTrigger value="help" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-muted-foreground transition-all duration-200">
+                  Help
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -87,6 +103,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <TabsContent value="shortcuts" className="mt-0"><KeyboardShortcuts /></TabsContent>
                 <TabsContent value="opencode" className="mt-0"><OpenCodeConfigManager /></TabsContent>
                 <TabsContent value="providers" className="mt-0"><ProviderSettings /></TabsContent>
+                <TabsContent value="help" className="mt-0"><HelpFaq /></TabsContent>
               </div>
             </div>
           </Tabs>
@@ -146,6 +163,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             {mobileView === 'shortcuts' && <KeyboardShortcuts />}
             {mobileView === 'opencode' && <OpenCodeConfigManager />}
             {mobileView === 'providers' && <ProviderSettings />}
+            {mobileView === 'help' && <HelpFaq />}
           </div>
         </div>
       </DialogContent>

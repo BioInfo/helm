@@ -38,6 +38,10 @@ export function ServerCard({ server, isSelected, onSelect }: ServerCardProps) {
             <Badge 
               variant="secondary" 
               className="text-xs px-1.5 py-0 shrink-0"
+              title={isTui 
+                ? "TUI mode: OpenCode running with terminal interface" 
+                : "Serve mode: Headless OpenCode (opencode serve)"
+              }
             >
               {isTui ? 'TUI' : 'serve'}
             </Badge>

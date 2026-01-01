@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'sonner'
@@ -12,6 +13,7 @@ import { PermissionProvider } from '@/contexts/PermissionContext'
 import { PermissionRequestDialog } from './components/session/PermissionRequestDialog'
 import { usePermissionContext } from './contexts/PermissionContext'
 import { GlobalPermissionNotification } from './components/permissions/GlobalPermissionNotification'
+import { WelcomeSheet } from './components/mobile/WelcomeSheet'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,10 +25,16 @@ const queryClient = new QueryClient({
 })
 
 function AppContent() {
-  const { isOpen, close } = useSettingsDialog()
+  const { isOpen, close, openToTab } = useSettingsDialog()
   useTheme()
 
-return (
+  useEffect(() => {
+    const handleOpenHelp = () => openToTab('help')
+    window.addEventListener('helm:open-help', handleOpenHelp)
+    return () => window.removeEventListener('helm:open-help', handleOpenHelp)
+  }, [openToTab])
+
+  return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Repos />} />
@@ -36,6 +44,7 @@ return (
       </Routes>
       <GlobalPermissionNotification />
       <SettingsDialog open={isOpen} onOpenChange={close} />
+      <WelcomeSheet />
       <Toaster
         position="bottom-right"
         expand={false}
