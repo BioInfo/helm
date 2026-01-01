@@ -1,6 +1,6 @@
-import type Database from 'better-sqlite3'
+import type { Db } from './schema'
 import type { Repo, CreateRepoInput } from '../types/repo'
-import { getReposPath } from '@opencode-manager/shared/config/env'
+import { getReposPath } from '@helm/shared/config/env'
 import path from 'path'
 
 export interface RepoRow {
@@ -34,7 +34,7 @@ function rowToRepo(row: RepoRow): Repo {
   }
 }
 
-export function createRepo(db: Database, repo: CreateRepoInput): Repo {
+export function createRepo(db: Db, repo: CreateRepoInput): Repo {
   const normalizedPath = repo.localPath.trim().replace(/\/+$/, '')
   
   const existing = repo.isLocal 
@@ -85,21 +85,21 @@ export function createRepo(db: Database, repo: CreateRepoInput): Repo {
   }
 }
 
-export function getRepoById(db: Database, id: number): Repo | null {
+export function getRepoById(db: Db, id: number): Repo | null {
   const stmt = db.prepare('SELECT * FROM repos WHERE id = ?')
   const row = stmt.get(id) as RepoRow | undefined
   
   return row ? rowToRepo(row) : null
 }
 
-export function getRepoByUrl(db: Database, repoUrl: string): Repo | null {
+export function getRepoByUrl(db: Db, repoUrl: string): Repo | null {
   const stmt = db.prepare('SELECT * FROM repos WHERE repo_url = ?')
   const row = stmt.get(repoUrl) as RepoRow | undefined
   
   return row ? rowToRepo(row) : null
 }
 
-export function getRepoByUrlAndBranch(db: Database, repoUrl: string, branch?: string): Repo | null {
+export function getRepoByUrlAndBranch(db: Db, repoUrl: string, branch?: string): Repo | null {
   const query = branch 
     ? 'SELECT * FROM repos WHERE repo_url = ? AND branch = ?'
     : 'SELECT * FROM repos WHERE repo_url = ? AND branch IS NULL'
@@ -112,36 +112,36 @@ export function getRepoByUrlAndBranch(db: Database, repoUrl: string, branch?: st
   return row ? rowToRepo(row) : null
 }
 
-export function getRepoByLocalPath(db: Database, localPath: string): Repo | null {
+export function getRepoByLocalPath(db: Db, localPath: string): Repo | null {
   const stmt = db.prepare('SELECT * FROM repos WHERE local_path = ?')
   const row = stmt.get(localPath) as RepoRow | undefined
   
   return row ? rowToRepo(row) : null
 }
 
-export function listRepos(db: Database): Repo[] {
+export function listRepos(db: Db): Repo[] {
   const stmt = db.prepare('SELECT * FROM repos ORDER BY cloned_at DESC')
   const rows = stmt.all() as RepoRow[]
   
   return rows.map(rowToRepo)
 }
 
-export function updateRepoStatus(db: Database, id: number, cloneStatus: Repo['cloneStatus']): void {
+export function updateRepoStatus(db: Db, id: number, cloneStatus: Repo['cloneStatus']): void {
   const stmt = db.prepare('UPDATE repos SET clone_status = ? WHERE id = ?')
   stmt.run(cloneStatus, id)
 }
 
-export function updateRepoConfigName(db: Database, id: number, configName: string): void {
+export function updateRepoConfigName(db: Db, id: number, configName: string): void {
   const stmt = db.prepare('UPDATE repos SET opencode_config_name = ? WHERE id = ?')
   stmt.run(configName, id)
 }
 
-export function updateLastPulled(db: Database, id: number): void {
+export function updateLastPulled(db: Db, id: number): void {
   const stmt = db.prepare('UPDATE repos SET last_pulled = ? WHERE id = ?')
   stmt.run(Date.now(), id)
 }
 
-export function deleteRepo(db: Database, id: number): void {
+export function deleteRepo(db: Db, id: number): void {
   const stmt = db.prepare('DELETE FROM repos WHERE id = ?')
   stmt.run(id)
 }

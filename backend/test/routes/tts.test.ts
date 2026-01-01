@@ -1,28 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockMkdir = vi.fn()
-const mockReadFile = vi.fn()
-const mockWriteFile = vi.fn()
-const mockReaddir = vi.fn()
-const mockStat = vi.fn()
-const mockUnlink = vi.fn()
+// vi.hoisted() required: vi.mock factories are hoisted before normal variable declarations
+const { mockMkdir, mockReadFile, mockWriteFile, mockReaddir, mockStat, mockUnlink, mockLogger } = vi.hoisted(() => ({
+  mockMkdir: vi.fn(),
+  mockReadFile: vi.fn(),
+  mockWriteFile: vi.fn(),
+  mockReaddir: vi.fn(),
+  mockStat: vi.fn(),
+  mockUnlink: vi.fn(),
+  mockLogger: {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}))
 
-const mockLogger = {
-  info: vi.fn(),
-  error: vi.fn(),
-  warn: vi.fn(),
-}
-
-vi.mock('fs/promises', async () => {
-  return {
-    mkdir: mockMkdir,
-    readFile: mockReadFile,
-    writeFile: mockWriteFile,
-    readdir: mockReaddir,
-    stat: mockStat,
-    unlink: mockUnlink,
-  }
-})
+vi.mock('fs/promises', () => ({
+  mkdir: mockMkdir,
+  readFile: mockReadFile,
+  writeFile: mockWriteFile,
+  readdir: mockReaddir,
+  stat: mockStat,
+  unlink: mockUnlink,
+}))
 
 vi.mock('bun:sqlite', () => ({
   Database: vi.fn(),
@@ -30,11 +30,9 @@ vi.mock('bun:sqlite', () => ({
 vi.mock('../../src/services/settings', () => ({
   SettingsService: vi.fn(),
 }))
-vi.mock('../../src/utils/logger', async () => {
-  return {
-    logger: mockLogger,
-  }
-})
+vi.mock('../../src/utils/logger', () => ({
+  logger: mockLogger,
+}))
 
 import { createTTSRoutes, cleanupExpiredCache, getCacheStats, generateCacheKey, ensureCacheDir, getCachedAudio, getCacheSize, cleanupOldestFiles } from '../../src/routes/tts'
 
@@ -102,10 +100,6 @@ describe('TTS Routes', () => {
 
   describe('getCachedAudio', () => {
     beforeEach(() => {
-      vi.useFakeTimers()
-    })
-
-beforeEach(() => {
       vi.useFakeTimers()
     })
 

@@ -1,6 +1,6 @@
-import Database from 'better-sqlite3'
+import type { Db } from '../db/schema'
 import { unlinkSync, existsSync } from 'fs'
-import { getOpenCodeConfigFilePath } from '@opencode-manager/shared/config/env'
+import { getOpenCodeConfigFilePath } from '@helm/shared/config/env'
 import { logger } from '../utils/logger'
 import stripJsonComments from 'strip-json-comments'
 import type { 
@@ -32,7 +32,7 @@ function parseJsonc(content: string): unknown {
 export class SettingsService {
   private static lastKnownGoodConfigContent: string | null = null
 
-  constructor(private db: Database) {}
+  constructor(private db: Db) {}
 
   initializeLastKnownGoodConfig(userId: string = 'default'): void {
     const settings = this.getSettings(userId)

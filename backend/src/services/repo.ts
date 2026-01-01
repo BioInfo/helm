@@ -1,12 +1,12 @@
 import { executeCommand } from '../utils/process'
 import { ensureDirectoryExists } from './file-operations'
 import * as db from '../db/queries'
-import type Database from 'better-sqlite3'
+import type { Db } from '../db/schema'
 import type { Repo, CreateRepoInput } from '../types/repo'
 import { logger } from '../utils/logger'
 import { SettingsService } from './settings'
 import { createGitEnvForRepoUrl, createNoPromptGitEnv, createGitHubGitEnv } from '../utils/git-auth'
-import { getReposPath } from '@opencode-manager/shared/config/env'
+import { getReposPath } from '@helm/shared/config/env'
 import path from 'path'
 
 export class GitAuthenticationError extends Error {
@@ -87,7 +87,7 @@ async function safeGetCurrentBranch(repoPath: string): Promise<string | null> {
   }
 }
 
-function getGitEnv(database: Database, repoUrl?: string | null): Record<string, string> {
+function getGitEnv(database: Db, repoUrl?: string | null): Record<string, string> {
   try {
     const settingsService = new SettingsService(database)
     const settings = settingsService.getSettings('default')
@@ -104,7 +104,7 @@ function getGitEnv(database: Database, repoUrl?: string | null): Record<string, 
 }
 
 export async function initLocalRepo(
-  database: Database,
+  database: Db,
   localPath: string,
   branch?: string
 ): Promise<Repo> {
@@ -187,7 +187,7 @@ export async function initLocalRepo(
 }
 
 export async function cloneRepo(
-  database: Database,
+  database: Db,
   repoUrl: string,
   branch?: string,
   useWorktree: boolean = false
@@ -405,7 +405,7 @@ export async function getCurrentBranch(repo: Repo): Promise<string | null> {
   return branch || repo.branch || repo.defaultBranch || null
 }
 
-export async function listBranches(database: Database, repo: Repo): Promise<{ local: string[], all: string[], current: string | null }> {
+export async function listBranches(database: Db, repo: Repo): Promise<{ local: string[], all: string[], current: string | null }> {
   try {
     const repoPath = path.resolve(getReposPath(), repo.localPath)
     const env = getGitEnv(database, repo.repoUrl)
@@ -449,7 +449,7 @@ export async function listBranches(database: Database, repo: Repo): Promise<{ lo
   }
 }
 
-export async function switchBranch(database: Database, repoId: number, branch: string): Promise<void> {
+export async function switchBranch(database: Db, repoId: number, branch: string): Promise<void> {
   const repo = db.getRepoById(database, repoId)
   if (!repo) {
     throw new Error(`Repo not found: ${repoId}`)
@@ -502,7 +502,7 @@ export async function switchBranch(database: Database, repoId: number, branch: s
   }
 }
 
-export async function createBranch(database: Database, repoId: number, branch: string): Promise<void> {
+export async function createBranch(database: Db, repoId: number, branch: string): Promise<void> {
   const repo = db.getRepoById(database, repoId)
   if (!repo) {
     throw new Error(`Repo not found: ${repoId}`)
@@ -525,7 +525,7 @@ export async function createBranch(database: Database, repoId: number, branch: s
   }
 }
 
-export async function pullRepo(database: Database, repoId: number): Promise<void> {
+export async function pullRepo(database: Db, repoId: number): Promise<void> {
   const repo = db.getRepoById(database, repoId)
   if (!repo) {
     throw new Error(`Repo not found: ${repoId}`)
@@ -550,7 +550,7 @@ export async function pullRepo(database: Database, repoId: number): Promise<void
   }
 }
 
-export async function deleteRepoFiles(database: Database, repoId: number): Promise<void> {
+export async function deleteRepoFiles(database: Db, repoId: number): Promise<void> {
   const repo = db.getRepoById(database, repoId)
   if (!repo) {
     throw new Error(`Repo not found: ${repoId}`)
@@ -656,7 +656,7 @@ function normalizeRepoUrl(url: string): { url: string; name: string } {
   }
 }
 
-export async function cleanupOrphanedDirectories(database: Database): Promise<void> {
+export async function cleanupOrphanedDirectories(database: Db): Promise<void> {
   try {
     const reposPath = getReposPath()
     await ensureDirectoryExists(reposPath)

@@ -4,7 +4,7 @@ import {
   DEFAULT_USER_PREFERENCES,
   type TTSConfig,
   type OpenCodeConfigContent,
-} from '@opencode-manager/shared'
+} from '@helm/shared'
 
 export type { TTSConfig, OpenCodeConfigContent }
 export { DEFAULT_TTS_CONFIG, DEFAULT_KEYBOARD_SHORTCUTS, DEFAULT_USER_PREFERENCES }

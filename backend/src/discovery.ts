@@ -35,12 +35,15 @@ export async function discoverServers(): Promise<OpenCodeServer[]> {
         const parts = line.split(/\s+/)
         if (parts.length < 9) continue
         
-        const pid = parseInt(parts[1], 10)
-        // Address is second-to-last (last is "(LISTEN)")
+        const pidStr = parts[1]
+        if (!pidStr) continue
+        const pid = parseInt(pidStr, 10)
+        
         const address = parts[parts.length - 2]
+        if (!address) continue
         const portMatch = address.match(/:(\d+)$/)
         
-        if (!portMatch) continue
+        if (!portMatch || !portMatch[1]) continue
         
         const port = parseInt(portMatch[1], 10)
         

@@ -13,9 +13,9 @@ import {
   getFileStats, 
   listDirectory 
 } from './file-operations'
-import { getReposPath, FILE_LIMITS } from '@opencode-manager/shared/config/env'
-import { ALLOWED_MIME_TYPES } from '@opencode-manager/shared'
-import type { ChunkedFileInfo, PatchOperation } from '@opencode-manager/shared'
+import { getReposPath, FILE_LIMITS } from '@helm/shared/config/env'
+import { ALLOWED_MIME_TYPES } from '@helm/shared'
+import type { ChunkedFileInfo, PatchOperation } from '@helm/shared'
 
 const SHARED_WORKSPACE_BASE = getReposPath()
 

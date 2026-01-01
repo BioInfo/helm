@@ -1,5 +1,6 @@
 import * as pty from 'node-pty'
 import * as fs from 'fs'
+import * as os from 'os'
 import { logger } from '../utils/logger'
 
 export interface TerminalSession {
@@ -9,105 +10,190 @@ export interface TerminalSession {
   createdAt: number
   lastActivity: number
   subscribers: Set<(data: string) => void>
-  outputBuffer: string[]  // Buffer output until first subscriber
+  outputBuffer: string[]
   hasHadSubscriber: boolean
+  alive: boolean
 }
 
 const sessions = new Map<string, TerminalSession>()
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000
 const CLEANUP_INTERVAL_MS = 60 * 1000
+const MAX_BUFFER_SIZE = 50000 // characters
 
 function getShell(): string {
-  const shell = '/bin/bash'
-  logger.info(`[Terminal] Using shell: ${shell}`)
-  return shell
+  // Try shells in order of preference
+  const shells = ['/bin/bash', '/bin/sh', '/usr/bin/bash', '/usr/bin/sh']
+  
+  for (const shell of shells) {
+    try {
+      fs.accessSync(shell, fs.constants.X_OK)
+      logger.info(`[Terminal] Found shell: ${shell}`)
+      return shell
+    } catch {
+      // Try next shell
+    }
+  }
+  
+  // Fallback to environment or sh
+  return process.env.SHELL || '/bin/sh'
+}
+
+function getEnvironment(workdir: string): Record<string, string> {
+  const homeDir = process.env.HOME || os.homedir() || '/tmp'
+  
+  return {
+    // Essential
+    HOME: homeDir,
+    USER: process.env.USER || 'node',
+    SHELL: getShell(),
+    TERM: 'xterm-256color',
+    COLORTERM: 'truecolor',
+    
+    // Path
+    PATH: process.env.PATH || '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+    
+    // Working directory
+    PWD: workdir,
+    
+    // Locale
+    LANG: process.env.LANG || 'en_US.UTF-8',
+    LC_ALL: process.env.LC_ALL || 'en_US.UTF-8',
+    
+    // Terminal settings
+    LINES: '24',
+    COLUMNS: '80',
+    
+    // Disable features that might cause issues
+    HISTFILE: '',
+    HISTSIZE: '1000',
+  }
 }
 
 export function createTerminalSession(sessionId: string, workdir: string): TerminalSession {
-  if (sessions.has(sessionId)) {
-    const existing = sessions.get(sessionId)!
+  // Return existing session if it exists and is alive
+  const existing = sessions.get(sessionId)
+  if (existing && existing.alive) {
     existing.lastActivity = Date.now()
+    logger.info(`[Terminal] Returning existing session ${sessionId}`)
     return existing
+  }
+  
+  // Clean up dead session if exists
+  if (existing) {
+    sessions.delete(sessionId)
   }
 
   const shell = getShell()
   
+  // Validate workdir
+  let validWorkdir = workdir
+  try {
+    fs.accessSync(workdir, fs.constants.R_OK | fs.constants.X_OK)
+  } catch {
+    logger.warn(`[Terminal] Workdir ${workdir} not accessible, using /tmp`)
+    validWorkdir = '/tmp'
+  }
+  
   logger.info(`[Terminal] Creating session ${sessionId}`)
   logger.info(`[Terminal] Shell: ${shell}`)
-  logger.info(`[Terminal] Workdir: ${workdir}`)
-  logger.info(`[Terminal] node-pty available: ${typeof pty.spawn === 'function'}`)
+  logger.info(`[Terminal] Workdir: ${validWorkdir}`)
+  
+  const env = getEnvironment(validWorkdir)
+  
+  // Create PTY with login shell (no -i flag which requires tty)
+  // Use -l for login shell which sources profiles properly
+  let ptyProcess: pty.IPty
   
   try {
-    fs.accessSync(shell, fs.constants.X_OK)
-    logger.info(`[Terminal] Shell ${shell} is executable`)
+    ptyProcess = pty.spawn(shell, ['-l'], {
+      name: 'xterm-256color',
+      cols: 80,
+      rows: 24,
+      cwd: validWorkdir,
+      env,
+    })
+    logger.info(`[Terminal] PTY spawned, pid: ${ptyProcess.pid}`)
   } catch (err) {
-    logger.error(`[Terminal] Shell ${shell} not accessible:`, err)
+    logger.error(`[Terminal] Failed to spawn PTY with -l, trying without args:`, err)
+    
+    // Fallback: try without any args
+    try {
+      ptyProcess = pty.spawn(shell, [], {
+        name: 'xterm-256color',
+        cols: 80,
+        rows: 24,
+        cwd: validWorkdir,
+        env,
+      })
+      logger.info(`[Terminal] PTY spawned (fallback), pid: ${ptyProcess.pid}`)
+    } catch (err2) {
+      logger.error(`[Terminal] Failed to spawn PTY entirely:`, err2)
+      throw new Error(`Failed to create terminal: ${err2}`)
+    }
   }
-  
-  try {
-    fs.accessSync(workdir, fs.constants.R_OK)
-    logger.info(`[Terminal] Workdir ${workdir} is accessible`)
-  } catch (err) {
-    logger.error(`[Terminal] Workdir ${workdir} not accessible:`, err)
-  }
-  
-  logger.info(`[Terminal] Spawning PTY with shell: ${shell}`)
-  const ptyProcess = pty.spawn(shell, ['--norc', '--noprofile', '-i'], {
-    name: 'xterm-256color',
-    cols: 80,
-    rows: 24,
-    cwd: workdir,
-    env: {
-      HOME: process.env.HOME || '/tmp',
-      PATH: process.env.PATH || '/usr/bin:/bin',
-      TERM: 'xterm-256color',
-      PS1: '\\$ ',
-      USER: process.env.USER || 'user',
-    },
-  })
-  logger.info(`[Terminal] PTY spawned, pid: ${ptyProcess.pid}`)
 
   const session: TerminalSession = {
     id: sessionId,
     pty: ptyProcess,
-    workdir,
+    workdir: validWorkdir,
     createdAt: Date.now(),
     lastActivity: Date.now(),
     subscribers: new Set(),
     outputBuffer: [],
     hasHadSubscriber: false,
+    alive: true,
   }
 
+  // Handle data from PTY
   ptyProcess.onData((data) => {
-    session.lastActivity = Date.now()
-    logger.info(`[Terminal] PTY output for ${sessionId}: ${data.length} bytes, subscribers: ${session.subscribers.size}`)
+    if (!session.alive) return
     
-    if (session.subscribers.size === 0 && !session.hasHadSubscriber) {
+    session.lastActivity = Date.now()
+    
+    // Buffer if no subscribers yet
+    if (session.subscribers.size === 0) {
       session.outputBuffer.push(data)
-      logger.info(`[Terminal] Buffered output for ${sessionId}, buffer size: ${session.outputBuffer.length}`)
-      if (session.outputBuffer.length > 1000) {
+      
+      // Trim buffer if too large
+      const totalSize = session.outputBuffer.reduce((sum, s) => sum + s.length, 0)
+      while (totalSize > MAX_BUFFER_SIZE && session.outputBuffer.length > 1) {
         session.outputBuffer.shift()
       }
       return
     }
     
+    // Send to all subscribers
     for (const subscriber of session.subscribers) {
       try {
         subscriber(data)
       } catch (err) {
-        logger.error(`Failed to send data to subscriber for session ${sessionId}:`, err)
+        logger.error(`[Terminal] Failed to send to subscriber:`, err)
       }
     }
   })
 
+  // Handle PTY exit
   ptyProcess.onExit(({ exitCode, signal }) => {
-    logger.info(`Terminal session ${sessionId} exited with code ${exitCode}, signal ${signal}`)
-    sessions.delete(sessionId)
+    logger.info(`[Terminal] Session ${sessionId} exited: code=${exitCode}, signal=${signal}`)
+    session.alive = false
+    
+    // Notify subscribers of exit
+    const exitMessage = `\r\n[Process exited with code ${exitCode}${signal ? `, signal ${signal}` : ''}]\r\n`
+    for (const subscriber of session.subscribers) {
+      try {
+        subscriber(exitMessage)
+      } catch {
+        // Ignore errors on exit notification
+      }
+    }
+    
+    // Don't immediately delete - allow reconnection
+    // Cleanup will handle it after timeout
   })
 
   sessions.set(sessionId, session)
-  logger.info(`Created terminal session ${sessionId} in ${workdir}`)
+  logger.info(`[Terminal] Created session ${sessionId} in ${validWorkdir}`)
   
   return session
 }
@@ -122,24 +208,37 @@ export function getTerminalSession(sessionId: string): TerminalSession | undefin
 
 export function writeToTerminal(sessionId: string, data: string): boolean {
   const session = sessions.get(sessionId)
-  if (!session) {
+  if (!session || !session.alive) {
+    logger.warn(`[Terminal] Cannot write to session ${sessionId}: ${!session ? 'not found' : 'not alive'}`)
     return false
   }
   
   session.lastActivity = Date.now()
-  session.pty.write(data)
-  return true
+  
+  try {
+    session.pty.write(data)
+    return true
+  } catch (err) {
+    logger.error(`[Terminal] Error writing to session ${sessionId}:`, err)
+    return false
+  }
 }
 
 export function resizeTerminal(sessionId: string, cols: number, rows: number): boolean {
   const session = sessions.get(sessionId)
-  if (!session) {
+  if (!session || !session.alive) {
     return false
   }
   
   session.lastActivity = Date.now()
-  session.pty.resize(cols, rows)
-  return true
+  
+  try {
+    session.pty.resize(Math.max(cols, 10), Math.max(rows, 2))
+    return true
+  } catch (err) {
+    logger.error(`[Terminal] Error resizing session ${sessionId}:`, err)
+    return false
+  }
 }
 
 export function killTerminalSession(sessionId: string): boolean {
@@ -148,9 +247,17 @@ export function killTerminalSession(sessionId: string): boolean {
     return false
   }
   
-  session.pty.kill()
+  try {
+    if (session.alive) {
+      session.pty.kill()
+    }
+  } catch {
+    // Ignore kill errors
+  }
+  
+  session.alive = false
   sessions.delete(sessionId)
-  logger.info(`Killed terminal session ${sessionId}`)
+  logger.info(`[Terminal] Killed session ${sessionId}`)
   return true
 }
 
@@ -160,29 +267,40 @@ export function subscribeToTerminal(
 ): (() => void) | null {
   const session = sessions.get(sessionId)
   if (!session) {
+    logger.warn(`[Terminal] Cannot subscribe to session ${sessionId}: not found`)
     return null
   }
   
   session.subscribers.add(callback)
   session.lastActivity = Date.now()
   
-  if (!session.hasHadSubscriber && session.outputBuffer.length > 0) {
-    session.hasHadSubscriber = true
+  // Flush buffered output to new subscriber
+  if (session.outputBuffer.length > 0) {
     const bufferedOutput = session.outputBuffer.join('')
     session.outputBuffer = []
-    logger.info(`[Terminal] Flushing ${bufferedOutput.length} bytes of buffered output for ${sessionId}`)
+    logger.info(`[Terminal] Flushing ${bufferedOutput.length} bytes to new subscriber`)
+    
     try {
       callback(bufferedOutput)
     } catch (err) {
-      logger.error(`Failed to send buffered data to subscriber for session ${sessionId}:`, err)
+      logger.error(`[Terminal] Error flushing buffer:`, err)
     }
-  } else {
-    logger.info(`[Terminal] No buffered output for ${sessionId}, hasHadSubscriber: ${session.hasHadSubscriber}, buffer: ${session.outputBuffer.length}`)
   }
+  
   session.hasHadSubscriber = true
+  
+  // If session is dead, notify subscriber
+  if (!session.alive) {
+    try {
+      callback('\r\n[Session ended. Create a new terminal.]\r\n')
+    } catch {
+      // Ignore
+    }
+  }
   
   return () => {
     session.subscribers.delete(callback)
+    logger.debug(`[Terminal] Subscriber removed from ${sessionId}, remaining: ${session.subscribers.size}`)
   }
 }
 
@@ -192,6 +310,7 @@ export function listTerminalSessions(): Array<{
   createdAt: number
   lastActivity: number
   subscriberCount: number
+  alive: boolean
 }> {
   return Array.from(sessions.values()).map(session => ({
     id: session.id,
@@ -199,6 +318,7 @@ export function listTerminalSessions(): Array<{
     createdAt: session.createdAt,
     lastActivity: session.lastActivity,
     subscriberCount: session.subscribers.size,
+    alive: session.alive,
   }))
 }
 
@@ -206,12 +326,29 @@ function cleanupInactiveSessions() {
   const now = Date.now()
   
   for (const [sessionId, session] of sessions) {
-    if (session.subscribers.size === 0 && now - session.lastActivity > SESSION_TIMEOUT_MS) {
-      logger.info(`Cleaning up inactive terminal session ${sessionId}`)
-      session.pty.kill()
+    const inactive = now - session.lastActivity > SESSION_TIMEOUT_MS
+    const dead = !session.alive && session.subscribers.size === 0
+    
+    if (inactive || dead) {
+      logger.info(`[Terminal] Cleaning up session ${sessionId} (inactive=${inactive}, dead=${dead})`)
+      
+      try {
+        if (session.alive) {
+          session.pty.kill()
+        }
+      } catch {
+        // Ignore cleanup errors
+      }
+      
       sessions.delete(sessionId)
     }
   }
 }
 
+// Start cleanup interval
 setInterval(cleanupInactiveSessions, CLEANUP_INTERVAL_MS)
+
+// Export for testing
+export function getSessionCount(): number {
+  return sessions.size
+}

@@ -1,10 +1,14 @@
 import Database from 'better-sqlite3'
+import type { Database as DatabaseInstance } from 'better-sqlite3'
 import { logger } from '../utils/logger'
 import { mkdirSync } from 'fs'
 import { dirname } from 'path'
 import { runMigrations } from './migrations'
 
-export function initializeDatabase(dbPath: string = './data/opencode.db'): Database.Database {
+// Export a canonical DB type for use across the codebase
+export type Db = DatabaseInstance
+
+export function initializeDatabase(dbPath: string = './data/opencode.db'): Db {
   mkdirSync(dirname(dbPath), { recursive: true })
   const db = new Database(dbPath)
   

@@ -28,8 +28,8 @@ import {
   getAgentsMdPath,
   getDatabasePath,
   ENV
-} from '@opencode-manager/shared/config/env'
-import { OpenCodeConfigSchema } from '@opencode-manager/shared/schemas'
+} from '@helm/shared/config/env'
+import { OpenCodeConfigSchema } from '@helm/shared/schemas'
 
 const { PORT, HOST } = ENV.SERVER
 const DB_PATH = getDatabasePath()

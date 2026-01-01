@@ -19,7 +19,13 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     python3-venv \
-    && rm -rf /var/lib/apt/lists/*
+    tini \
+    locales \
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
+    && locale-gen
+
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
@@ -75,8 +81,9 @@ COPY --from=builder /app/backend ./backend
 COPY --from=builder /app/frontend/dist ./frontend/dist
 COPY package.json pnpm-workspace.yaml ./
 
-RUN mkdir -p /app/backend/node_modules/@opencode-manager && \
-    ln -s /app/shared /app/backend/node_modules/@opencode-manager/shared
+RUN mkdir -p /app/backend/node_modules/@helm && \
+    ln -s /app/shared /app/backend/node_modules/@helm/shared && \
+    ln -s /app/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx /app/node_modules/tsx
 
 COPY scripts/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
@@ -91,6 +98,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 
 USER node
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["bun", "backend/src/index.ts"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/docker-entrypoint.sh"]
+CMD ["node", "--import", "tsx", "backend/src/index.ts"]
 

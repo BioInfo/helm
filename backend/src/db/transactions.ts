@@ -1,11 +1,9 @@
-import type Database from 'better-sqlite3'
+import type { Db } from './schema'
 import { logger } from '../utils/logger'
 
-
-
 export async function withTransactionAsync<T>(
-  db: Database,
-  fn: (db: Database) => Promise<T>
+  db: Db,
+  fn: (db: Db) => Promise<T>
 ): Promise<T> {
   try {
     db.exec('BEGIN TRANSACTION')

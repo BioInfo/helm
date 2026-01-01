@@ -3,8 +3,8 @@ import path from 'path'
 import { logger } from '../utils/logger'
 import { createGitHubGitEnv, createNoPromptGitEnv } from '../utils/git-auth'
 import { SettingsService } from './settings'
-import { getWorkspacePath, getOpenCodeConfigFilePath, ENV } from '@opencode-manager/shared/config/env'
-import type Database from 'better-sqlite3'
+import { getWorkspacePath, getOpenCodeConfigFilePath, ENV } from '@helm/shared/config/env'
+import type { Db } from '../db/schema'
 
 const OPENCODE_SERVER_PORT = ENV.OPENCODE.PORT
 const OPENCODE_SERVER_DIRECTORY = getWorkspacePath()
@@ -30,13 +30,13 @@ class OpenCodeServerManager {
   private serverProcess: ReturnType<typeof spawn> | null = null
   private serverPid: number | null = null
   private isHealthy: boolean = false
-  private db: Database | null = null
+  private db: Db | null = null
   private version: string | null = null
   private lastStartupError: string | null = null
 
   private constructor() {}
 
-  setDatabase(db: Database) {
+  setDatabase(db: Db) {
     this.db = db
   }
 

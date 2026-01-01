@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import type Database from 'better-sqlite3'
+import type { Db } from '../db/schema'
 import * as db from '../db/queries'
 import * as repoService from '../services/repo'
 import { GitAuthenticationError } from '../services/repo'
@@ -9,10 +9,10 @@ import { SettingsService } from '../services/settings'
 import { writeFileContent } from '../services/file-operations'
 import { opencodeServerManager } from '../services/opencode-single-server'
 import { logger } from '../utils/logger'
-import { getOpenCodeConfigFilePath, getReposPath } from '@opencode-manager/shared/config/env'
+import { getOpenCodeConfigFilePath, getReposPath } from '@helm/shared/config/env'
 import path from 'path'
 
-export function createRepoRoutes(database: Database) {
+export function createRepoRoutes(database: Db) {
   const app = new Hono()
   
   app.post('/', async (c) => {

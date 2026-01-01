@@ -1,9 +1,9 @@
 import { Hono } from 'hono'
 import * as fileService from '../services/files'
-import type Database from 'better-sqlite3'
+import type { Db } from '../db/schema'
 import { logger } from '../utils/logger'
 
-export function createFileRoutes(_database: Database) {
+export function createFileRoutes(_database: Db) {
   const app = new Hono()
 
   app.get('/*', async (c) => {

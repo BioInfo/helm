@@ -1,12 +1,12 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import Database from 'better-sqlite3'
+import type { Db } from '../db/schema'
 import { createHash } from 'crypto'
 import { mkdir, readFile, writeFile, readdir, stat, unlink } from 'fs/promises'
 import { join } from 'path'
 import { SettingsService } from '../services/settings'
 import { logger } from '../utils/logger'
-import { getWorkspacePath } from '@opencode-manager/shared/config/env'
+import { getWorkspacePath } from '@helm/shared/config/env'
 
 const TTS_CACHE_DIR = join(getWorkspacePath(), 'cache', 'tts')
 const DISCOVERY_CACHE_DIR = join(getWorkspacePath(), 'cache', 'discovery')
@@ -302,7 +302,7 @@ export async function getCacheStats(): Promise<{ count: number; sizeBytes: numbe
 
 export { generateCacheKey, ensureCacheDir, getCachedAudio, cacheAudio, getCacheSize, cleanupOldestFiles }
 
-export function createTTSRoutes(db: Database) {
+export function createTTSRoutes(db: Db) {
   const app = new Hono()
 
   app.post('/synthesize', async (c) => {

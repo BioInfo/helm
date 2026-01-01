@@ -1,7 +1,7 @@
-import Database from 'better-sqlite3'
+import { type Db } from './schema'
 import { logger } from '../utils/logger'
 
-export function runMigrations(db: Database.Database): void {
+export function runMigrations(db: Db): void {
   try {
     const tableInfo = db.prepare("PRAGMA table_info(repos)").all() as any[]
     

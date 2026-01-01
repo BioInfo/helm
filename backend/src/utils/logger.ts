@@ -1,4 +1,4 @@
-import { ENV } from '@opencode-manager/shared/config/env'
+import { ENV } from '@helm/shared/config/env'
 
 type LogLevel = 'info' | 'warn' | 'error' | 'debug'
 

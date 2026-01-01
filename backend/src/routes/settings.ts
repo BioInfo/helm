@@ -1,10 +1,10 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import type Database from 'better-sqlite3'
+import type { Db } from '../db/schema'
 import { SettingsService } from '../services/settings'
 import { writeFileContent, readFileContent, fileExists } from '../services/file-operations'
 import { patchOpenCodeConfig, proxyToOpenCodeWithDirectory } from '../services/proxy'
-import { getOpenCodeConfigFilePath, getAgentsMdPath } from '@opencode-manager/shared/config/env'
+import { getOpenCodeConfigFilePath, getAgentsMdPath } from '@helm/shared/config/env'
 import { 
   UserPreferencesSchema, 
   OpenCodeConfigSchema,
@@ -61,7 +61,7 @@ async function extractOpenCodeError(response: Response, defaultError: string): P
     : defaultError
 }
 
-export function createSettingsRoutes(db: Database) {
+export function createSettingsRoutes(db: Db) {
   const app = new Hono()
   const settingsService = new SettingsService(db)
 

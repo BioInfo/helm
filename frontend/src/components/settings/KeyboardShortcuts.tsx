@@ -143,7 +143,7 @@ export function KeyboardShortcuts() {
                 onClick={() => startRecording(action)}
                 className="px-3 py-1.5 bg-accent border border-border hover:border-border rounded text-sm text-foreground font-mono transition-colors"
               >
-                {normalizeShortcut(keys)}
+                {normalizeShortcut(keys as string)}
               </button>
             )}
           </div>

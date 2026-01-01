@@ -1,7 +1,7 @@
 import { executeCommand } from '../utils/process'
 import { logger } from '../utils/logger'
 import { SettingsService } from './settings'
-import type Database from 'better-sqlite3'
+import type { Db } from '../db/schema'
 import path from 'path'
 import { createGitHubGitEnv, createNoPromptGitEnv } from '../utils/git-auth'
 
@@ -14,7 +14,7 @@ async function hasCommits(repoPath: string): Promise<boolean> {
   }
 }
 
-function getGitEnvironment(database: Database): Record<string, string> {
+function getGitEnvironment(database: Db): Record<string, string> {
   try {
     const settingsService = new SettingsService(database)
     const settings = settingsService.getSettings('default')
@@ -143,7 +143,7 @@ function parsePorcelainV2(output: string): { branch: string; ahead: number; behi
   return { branch, ahead, behind, files }
 }
 
-export async function getGitStatus(repoPath: string, database?: Database): Promise<GitStatusResponse> {
+export async function getGitStatus(repoPath: string, database?: Db): Promise<GitStatusResponse> {
   try {
     const fullPath = path.resolve(repoPath)
     const env = database ? getGitEnvironment(database) : undefined
@@ -163,7 +163,7 @@ export async function getGitStatus(repoPath: string, database?: Database): Promi
   }
 }
 
-export async function getFileDiff(repoPath: string, filePath: string, database?: Database): Promise<FileDiffResponse> {
+export async function getFileDiff(repoPath: string, filePath: string, database?: Db): Promise<FileDiffResponse> {
   try {
     const fullRepoPath = path.resolve(repoPath)
     const status = await getGitStatus(repoPath, database)
