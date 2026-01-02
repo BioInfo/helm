@@ -1,22 +1,89 @@
 import { Hono } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { discoverServers, type OpenCodeServer } from '../discovery'
+import type { Db } from '../db/schema'
+import { listEnabledRemoteServers, updateRemoteServerLastSeen } from '../db/queries'
 import { logger } from '../utils/logger'
 
-const app = new Hono()
-
+let db: Db | null = null
 let cache: { servers: OpenCodeServer[]; timestamp: number } | null = null
+
+export function setServersDb(database: Db) {
+  db = database
+}
+
+async function discoverAllServers(): Promise<OpenCodeServer[]> {
+  const localServers = await discoverServers()
+  
+  if (!db) {
+    return localServers
+  }
+  
+  const remoteConfigs = listEnabledRemoteServers(db)
+  const remoteServers: OpenCodeServer[] = []
+  
+  for (const config of remoteConfigs) {
+    let status: 'healthy' | 'unhealthy' = 'unhealthy'
+    let workdir = 'unknown'
+    let projectName = config.name
+    
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 3000)
+      
+      const healthResponse = await fetch(`http://${config.host}:${config.port}/api/health`, {
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+      
+      if (healthResponse.ok) {
+        status = 'healthy'
+        updateRemoteServerLastSeen(db, config.id)
+      }
+    } catch {
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 2000)
+        
+        const sessionResponse = await fetch(`http://${config.host}:${config.port}/session`, {
+          signal: controller.signal,
+        })
+        clearTimeout(timeoutId)
+        
+        if (sessionResponse.ok || sessionResponse.status === 401) {
+          status = 'healthy'
+          updateRemoteServerLastSeen(db, config.id)
+        }
+      } catch {}
+    }
+    
+    remoteServers.push({
+      id: `remote-${config.id}`,
+      pid: 0,
+      port: config.port,
+      mode: 'serve',
+      workdir,
+      projectName,
+      status,
+      isRemote: true,
+      remoteHost: config.host,
+    })
+  }
+  
+  return [...localServers, ...remoteServers]
+}
 
 async function getServerById(id: string): Promise<OpenCodeServer | null> {
   const now = Date.now()
   if (!cache || now - cache.timestamp > 5000) {
-    cache = { servers: await discoverServers(), timestamp: now }
+    cache = { servers: await discoverAllServers(), timestamp: now }
   }
   return cache.servers.find(s => s.id === id) ?? null
 }
 
 async function proxyToServer(server: OpenCodeServer, path: string, options?: RequestInit): Promise<Response> {
-  const url = `http://127.0.0.1:${server.port}${path}`
+  const host = server.isRemote && server.remoteHost ? server.remoteHost : '127.0.0.1'
+  const url = `http://${host}:${server.port}${path}`
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
@@ -33,16 +100,18 @@ async function proxyToServer(server: OpenCodeServer, path: string, options?: Req
   }
 }
 
+const app = new Hono()
+
 app.get('/', async (c) => {
   const now = Date.now()
   if (!cache || now - cache.timestamp > 5000) {
-    cache = { servers: await discoverServers(), timestamp: now }
+    cache = { servers: await discoverAllServers(), timestamp: now }
   }
   return c.json(cache.servers)
 })
 
 app.post('/refresh', async (c) => {
-  cache = { servers: await discoverServers(), timestamp: Date.now() }
+  cache = { servers: await discoverAllServers(), timestamp: Date.now() }
   return c.json(cache.servers)
 })
 
@@ -303,8 +372,9 @@ app.get('/:id/event', async (c) => {
     return c.json({ error: 'Server not found' }, 404)
   }
   
+  const host = server.isRemote && server.remoteHost ? server.remoteHost : '127.0.0.1'
   const directory = c.req.query('directory')
-  const targetUrl = new URL(`http://127.0.0.1:${server.port}/event`)
+  const targetUrl = new URL(`http://${host}:${server.port}/event`)
   if (directory) {
     targetUrl.searchParams.set('directory', directory)
   }
@@ -341,9 +411,10 @@ app.all('/:id/proxy/*', async (c) => {
     return c.json({ error: 'Server not found' }, 404)
   }
   
+  const host = server.isRemote && server.remoteHost ? server.remoteHost : '127.0.0.1'
   const proxyPath = '/' + c.req.path.replace(/^\/api\/servers\/[^/]+\/proxy\/?/, '')
   const queryString = new URL(c.req.url).search
-  const targetUrl = `http://127.0.0.1:${server.port}${proxyPath}${queryString}`
+  const targetUrl = `http://${host}:${server.port}${proxyPath}${queryString}`
   
   try {
     const headers: Record<string, string> = {}
@@ -425,6 +496,9 @@ app.options('/:id/event', (c) => {
   })
 })
 
-export function createServersRoutes() {
+export function createServersRoutes(database?: Db) {
+  if (database) {
+    setServersDb(database)
+  }
   return app
 }

@@ -15,6 +15,8 @@ export interface OpenCodeServer {
   workdir: string
   projectName: string
   status: 'healthy' | 'unhealthy'
+  isRemote?: boolean
+  remoteHost?: string
 }
 
 export async function discoverServers(): Promise<OpenCodeServer[]> {

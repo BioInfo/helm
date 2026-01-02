@@ -9,6 +9,8 @@ export interface OpenCodeServer {
   workdir: string
   status: 'healthy' | 'unhealthy'
   projectName?: string
+  isRemote?: boolean
+  remoteHost?: string
 }
 
 export interface ServerConfigResponse {

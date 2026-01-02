@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header'
 import { GeneralSettings } from '@/components/settings/GeneralSettings'
 import { KeyboardShortcuts } from '@/components/settings/KeyboardShortcuts'
 import { OpenCodeConfigManager } from '@/components/settings/OpenCodeConfigManager'
+import { RemoteServersSettings } from '@/components/settings/RemoteServersSettings'
 
 export function Settings() {
   return (
@@ -11,7 +12,7 @@ export function Settings() {
 
       <div className="max-w-4xl mx-auto p-6">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8 bg-[#141414] border border-[#262626] p-1">
+          <TabsList className="grid w-full grid-cols-4 mb-8 bg-[#141414] border border-[#262626] p-1">
             <TabsTrigger 
               value="general"
               className="data-[state=active]:bg-blue-800 data-[state=active]:text-white text-zinc-400"
@@ -23,6 +24,12 @@ export function Settings() {
               className="data-[state=active]:bg-blue-800 data-[state=active]:text-white text-zinc-400"
             >
               Shortcuts
+            </TabsTrigger>
+            <TabsTrigger 
+              value="servers"
+              className="data-[state=active]:bg-blue-800 data-[state=active]:text-white text-zinc-400"
+            >
+              Servers
             </TabsTrigger>
             <TabsTrigger 
               value="opencode"
@@ -40,7 +47,11 @@ export function Settings() {
             <KeyboardShortcuts />
           </TabsContent>
 
-<TabsContent value="opencode">
+          <TabsContent value="servers">
+            <RemoteServersSettings />
+          </TabsContent>
+
+          <TabsContent value="opencode">
             <OpenCodeConfigManager />
           </TabsContent>
 

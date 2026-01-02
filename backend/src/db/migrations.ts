@@ -121,6 +121,32 @@ export function runMigrations(db: Db): void {
       logger.error('Failed to migrate local_path format:', error)
     }
     
+    // Migration: Add remote_servers table for multi-machine discovery
+    try {
+      const remoteServersTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='remote_servers'").get()
+      if (!remoteServersTable) {
+        logger.info('Creating remote_servers table for multi-machine discovery')
+        db.exec(`
+          CREATE TABLE remote_servers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            host TEXT NOT NULL,
+            port INTEGER NOT NULL DEFAULT 60828,
+            enabled BOOLEAN DEFAULT TRUE,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            last_seen INTEGER,
+            UNIQUE(host, port)
+          );
+          
+          CREATE INDEX idx_remote_servers_enabled ON remote_servers(enabled);
+        `)
+        logger.info('Successfully created remote_servers table')
+      }
+    } catch (error) {
+      logger.error('Failed to create remote_servers table:', error)
+    }
+    
     logger.info('Database migrations completed successfully')
   } catch (error) {
     logger.error('Failed to run database migrations:', error)

@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Circle, Terminal, Server, Folder, MessageSquarePlus, Loader2 } from "lucide-react"
+import { Circle, Terminal, Server, Folder, MessageSquarePlus, Loader2, Globe } from "lucide-react"
 import type { OpenCodeServer } from "@/stores/serverStore"
 import { findOrCreateRepoForPath } from "@/api/repos"
 import { OpenCodeClient } from "@/api/opencode"
@@ -80,6 +80,16 @@ export function ServerCard({ server, isSelected, onSelect }: ServerCardProps) {
             >
               {isTui ? 'TUI' : 'serve'}
             </Badge>
+            {server.isRemote && (
+              <Badge 
+                variant="outline" 
+                className="text-xs px-1.5 py-0 shrink-0 border-blue-500/50 text-blue-400"
+                title={`Remote server: ${server.remoteHost}`}
+              >
+                <Globe className="w-3 h-3 mr-1" />
+                remote
+              </Badge>
+            )}
           </div>
 
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -97,8 +107,17 @@ export function ServerCard({ server, isSelected, onSelect }: ServerCardProps) {
           </div>
 
           <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground/80 truncate">
-            <Folder className="w-3 h-3 shrink-0" />
-            <span className="truncate">{server.workdir}</span>
+            {server.isRemote ? (
+              <>
+                <Globe className="w-3 h-3 shrink-0" />
+                <span className="truncate">{server.remoteHost}:{server.port}</span>
+              </>
+            ) : (
+              <>
+                <Folder className="w-3 h-3 shrink-0" />
+                <span className="truncate">{server.workdir}</span>
+              </>
+            )}
           </div>
 
           <Button

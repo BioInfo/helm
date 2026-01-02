@@ -146,3 +146,96 @@ export function deleteRepo(db: Db, id: number): void {
   const stmt = db.prepare('DELETE FROM repos WHERE id = ?')
   stmt.run(id)
 }
+
+export interface RemoteServer {
+  id: number
+  name: string
+  host: string
+  port: number
+  enabled: boolean
+  createdAt: number
+  updatedAt: number
+  lastSeen?: number
+}
+
+interface RemoteServerRow {
+  id: number
+  name: string
+  host: string
+  port: number
+  enabled: number
+  created_at: number
+  updated_at: number
+  last_seen?: number
+}
+
+function rowToRemoteServer(row: RemoteServerRow): RemoteServer {
+  return {
+    id: row.id,
+    name: row.name,
+    host: row.host,
+    port: row.port,
+    enabled: Boolean(row.enabled),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    lastSeen: row.last_seen,
+  }
+}
+
+export function listRemoteServers(db: Db): RemoteServer[] {
+  const stmt = db.prepare('SELECT * FROM remote_servers ORDER BY name ASC')
+  const rows = stmt.all() as RemoteServerRow[]
+  return rows.map(rowToRemoteServer)
+}
+
+export function listEnabledRemoteServers(db: Db): RemoteServer[] {
+  const stmt = db.prepare('SELECT * FROM remote_servers WHERE enabled = 1 ORDER BY name ASC')
+  const rows = stmt.all() as RemoteServerRow[]
+  return rows.map(rowToRemoteServer)
+}
+
+export function getRemoteServerById(db: Db, id: number): RemoteServer | null {
+  const stmt = db.prepare('SELECT * FROM remote_servers WHERE id = ?')
+  const row = stmt.get(id) as RemoteServerRow | undefined
+  return row ? rowToRemoteServer(row) : null
+}
+
+export function createRemoteServer(db: Db, server: { name: string; host: string; port: number }): RemoteServer {
+  const now = Date.now()
+  const stmt = db.prepare(`
+    INSERT INTO remote_servers (name, host, port, enabled, created_at, updated_at)
+    VALUES (?, ?, ?, 1, ?, ?)
+  `)
+  const result = stmt.run(server.name, server.host, server.port, now, now)
+  return getRemoteServerById(db, Number(result.lastInsertRowid))!
+}
+
+export function updateRemoteServer(db: Db, id: number, updates: { name?: string; host?: string; port?: number; enabled?: boolean }): RemoteServer | null {
+  const existing = getRemoteServerById(db, id)
+  if (!existing) return null
+  
+  const stmt = db.prepare(`
+    UPDATE remote_servers 
+    SET name = ?, host = ?, port = ?, enabled = ?, updated_at = ?
+    WHERE id = ?
+  `)
+  stmt.run(
+    updates.name ?? existing.name,
+    updates.host ?? existing.host,
+    updates.port ?? existing.port,
+    updates.enabled !== undefined ? (updates.enabled ? 1 : 0) : (existing.enabled ? 1 : 0),
+    Date.now(),
+    id
+  )
+  return getRemoteServerById(db, id)
+}
+
+export function updateRemoteServerLastSeen(db: Db, id: number): void {
+  const stmt = db.prepare('UPDATE remote_servers SET last_seen = ? WHERE id = ?')
+  stmt.run(Date.now(), id)
+}
+
+export function deleteRemoteServer(db: Db, id: number): void {
+  const stmt = db.prepare('DELETE FROM remote_servers WHERE id = ?')
+  stmt.run(id)
+}

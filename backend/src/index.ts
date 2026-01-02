@@ -14,6 +14,7 @@ import { createProvidersRoutes } from './routes/providers'
 import { createOAuthRoutes } from './routes/oauth'
 import { createServersRoutes } from './routes/servers'
 import { createTerminalRoutes } from './routes/terminal'
+import { createRemoteServersRoutes } from './routes/remote-servers'
 import { ensureDirectoryExists, writeFileContent, fileExists, readFileContent } from './services/file-operations'
 import { SettingsService } from './services/settings'
 import { opencodeServerManager } from './services/opencode-single-server'
@@ -230,8 +231,9 @@ app.route('/api/files', createFileRoutes(db))
 app.route('/api/providers', createProvidersRoutes())
 app.route('/api/oauth', createOAuthRoutes())
 app.route('/api/tts', createTTSRoutes(db))
-app.route('/api/servers', createServersRoutes())
+app.route('/api/servers', createServersRoutes(db))
 app.route('/api/terminal', createTerminalRoutes())
+app.route('/api/remote-servers', createRemoteServersRoutes(db))
 
 app.all('/api/opencode/*', async (c) => {
   const request = c.req.raw

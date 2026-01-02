@@ -52,6 +52,20 @@ export function initializeDatabase(dbPath: string = './data/opencode.db'): Db {
     
     CREATE INDEX IF NOT EXISTS idx_opencode_user_id ON opencode_configs(user_id);
     CREATE INDEX IF NOT EXISTS idx_opencode_default ON opencode_configs(user_id, is_default);
+    
+    CREATE TABLE IF NOT EXISTS remote_servers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      host TEXT NOT NULL,
+      port INTEGER NOT NULL DEFAULT 60828,
+      enabled BOOLEAN DEFAULT TRUE,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      last_seen INTEGER,
+      UNIQUE(host, port)
+    );
+    
+    CREATE INDEX IF NOT EXISTS idx_remote_servers_enabled ON remote_servers(enabled);
   `)
   
   runMigrations(db)
