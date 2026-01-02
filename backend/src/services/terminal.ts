@@ -22,8 +22,19 @@ const CLEANUP_INTERVAL_MS = 60 * 1000
 const MAX_BUFFER_SIZE = 50000 // characters
 
 function getShell(): string {
-  // Try shells in order of preference
-  const shells = ['/bin/bash', '/bin/sh', '/usr/bin/bash', '/usr/bin/sh']
+  // Prefer user's configured shell first
+  if (process.env.SHELL) {
+    try {
+      fs.accessSync(process.env.SHELL, fs.constants.X_OK)
+      logger.info(`[Terminal] Using user shell: ${process.env.SHELL}`)
+      return process.env.SHELL
+    } catch {
+      // Fall through to defaults
+    }
+  }
+  
+  // Try shells in order of preference (zsh first for macOS)
+  const shells = ['/bin/zsh', '/bin/bash', '/bin/sh', '/usr/bin/zsh', '/usr/bin/bash', '/usr/bin/sh']
   
   for (const shell of shells) {
     try {
@@ -35,8 +46,7 @@ function getShell(): string {
     }
   }
   
-  // Fallback to environment or sh
-  return process.env.SHELL || '/bin/sh'
+  return '/bin/sh'
 }
 
 function getEnvironment(workdir: string): Record<string, string> {

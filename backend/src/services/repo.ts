@@ -1,5 +1,5 @@
 import { executeCommand } from '../utils/process'
-import { ensureDirectoryExists } from './file-operations'
+import { ensureDirectoryExists, fileExists } from './file-operations'
 import * as db from '../db/queries'
 import type { Db } from '../db/schema'
 import type { Repo, CreateRepoInput } from '../types/repo'
