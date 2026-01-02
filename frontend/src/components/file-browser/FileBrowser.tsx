@@ -12,7 +12,8 @@ import { FolderOpen, Upload, RefreshCw, X } from 'lucide-react'
 import type { FileInfo } from '@/types/files'
 import { API_BASE_URL } from '@/config'
 import { useMobile } from '@/hooks/useMobile'
-import { useFile } from '@/api/files'
+import { useServerFile } from '@/api/files'
+import { useSelectedServer } from '@/stores/serverStore'
 
 interface UploadItem {
   file: File
@@ -129,8 +130,28 @@ export function FileBrowser({ basePath = '', onFileSelect, embedded = false, ini
   const dropZoneRef = useRef<HTMLDivElement>(null)
   const uploadCancelledRef = useRef(false)
   const isMobile = useMobile()
+  
+  const selectedServer = useSelectedServer()
+  
+  const getDirectoryApiUrl = useCallback((path: string) => {
+    if (selectedServer) {
+      const encodedPath = encodeURIComponent(path || '/')
+      return `${API_BASE_URL}/api/servers/${selectedServer.id}/files?path=${encodedPath}`
+    }
+    return `${API_BASE_URL}/api/files/${path}`
+  }, [selectedServer])
+  
+  const getFileContentUrl = useCallback((relativePath: string) => {
+    if (selectedServer) {
+      const workdir = selectedServer.workdir.replace(/\/$/, '')
+      const cleanPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`
+      const absolutePath = `${workdir}${cleanPath}`
+      return `${API_BASE_URL}/api/files${absolutePath}`
+    }
+    return `${API_BASE_URL}/api/files/${relativePath}`
+  }, [selectedServer])
 
-   const { data: initialFileData, error: initialFileError } = useFile(initialSelectedFile)
+  const { data: initialFileData, error: initialFileError } = useServerFile(initialSelectedFile, selectedServer?.workdir)
 
 useEffect(() => {
   if (initialFileData) {
@@ -152,7 +173,7 @@ useEffect(() => {
     setError(null)
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/files/${path}`)
+      const response = await fetch(getDirectoryApiUrl(path))
       if (!response.ok) {
         throw new Error(`Failed to load files: ${response.statusText}`)
       }
@@ -166,7 +187,7 @@ useEffect(() => {
     } finally {
       setLoading(false)
     }
-  }, [onDirectoryLoad])
+  }, [onDirectoryLoad, getDirectoryApiUrl])
 
   const handleFileSelect = useCallback(async (file: FileInfo) => {
     if (file.isDirectory) {
@@ -174,10 +195,9 @@ useEffect(() => {
       return
     }
     
-    // Fetch the full file content when selecting a file
     setLoading(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/files/${file.path}`)
+      const response = await fetch(getFileContentUrl(file.path))
       if (!response.ok) {
         throw new Error(`Failed to load file: ${response.statusText}`)
       }
@@ -186,7 +206,6 @@ useEffect(() => {
       setSelectedFile(fullFileData)
       onFileSelect?.(fullFileData)
       
-      // On mobile, open preview in modal
       if (isMobile) {
         setIsPreviewModalOpen(true)
       }
@@ -196,7 +215,7 @@ useEffect(() => {
     } finally {
       setLoading(false)
     }
-  }, [onFileSelect, isMobile])
+  }, [onFileSelect, isMobile, getFileContentUrl])
 
   const handleCloseModal = useCallback(() => {
     setIsPreviewModalOpen(false)

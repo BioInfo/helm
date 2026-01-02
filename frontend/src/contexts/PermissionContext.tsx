@@ -92,12 +92,7 @@ function useActiveRepos(queryClient: ReturnType<typeof useQueryClient>): ActiveR
         const repos = Array.from(repoMap.entries())
           .filter(([repoKey]) => {
             const url = repoKey.split('|')[0]
-            try {
-              new URL(url)
-              return true
-            } catch {
-              return false
-            }
+            return url && (url.startsWith('http') || url.startsWith('/api/'))
           })
           .map(([repoKey, { directory, sessionIds }]) => ({
             url: repoKey.split('|')[0],
@@ -260,20 +255,18 @@ prevPendingCountRef.current = pendingCount
       const existingES = currentRefs.get(repoKey)
       if (existingES) return
 
-      let url: URL
-      try {
-        url = new URL(repo.url)
-      } catch {
-        console.error('Invalid URL for SSE:', repo.url)
-        return
-      }
+      let eventUrl: string
       
-      if (url.pathname.endsWith('/')) {
-        url.pathname += 'stream'
+      if (repo.url.includes('/api/servers/') && repo.url.includes('/proxy')) {
+        const eventPath = repo.url.replace('/proxy', '/event')
+        eventUrl = `${window.location.origin}${eventPath}`
+      } else if (repo.url.startsWith('http')) {
+        eventUrl = repo.url.endsWith('/') ? `${repo.url}stream` : `${repo.url}/stream`
       } else {
-        url.pathname += '/stream'
+        eventUrl = `${window.location.origin}${repo.url}/stream`
       }
       
+      const url = new URL(eventUrl)
       if (repo.directory) {
         url.searchParams.set('directory', repo.directory)
       }

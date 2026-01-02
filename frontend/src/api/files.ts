@@ -12,10 +12,38 @@ async function fetchFile(path: string): Promise<FileInfo> {
   return response.json()
 }
 
+async function fetchServerFile(path: string, workdir: string): Promise<FileInfo> {
+  const cleanWorkdir = workdir.replace(/\/$/, '')
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  const absolutePath = `${cleanWorkdir}${cleanPath}`
+  
+  const response = await fetch(`${API_BASE_URL}/api/files${absolutePath}`)
+  
+  if (!response.ok) {
+    throw new Error(`Failed to load file: ${response.statusText}`)
+  }
+  
+  return response.json()
+}
+
 export function useFile(path: string | undefined) {
   return useQuery({
     queryKey: ['file', path],
     queryFn: () => path ? fetchFile(path) : Promise.reject(new Error('No file path provided')),
+    enabled: !!path,
+  })
+}
+
+export function useServerFile(path: string | undefined, serverWorkdir: string | undefined) {
+  return useQuery({
+    queryKey: ['serverFile', serverWorkdir, path],
+    queryFn: () => {
+      if (!path) return Promise.reject(new Error('No file path provided'))
+      if (serverWorkdir) {
+        return fetchServerFile(path, serverWorkdir)
+      }
+      return fetchFile(path)
+    },
     enabled: !!path,
   })
 }

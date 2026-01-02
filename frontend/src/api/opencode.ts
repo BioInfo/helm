@@ -151,10 +151,20 @@ export class OpenCodeClient {
   }
 
   getEventSourceURL() {
-    const base = this.baseURL.startsWith('http') 
-      ? this.baseURL 
-      : `${window.location.origin}${this.baseURL}`
-    const url = new URL(`${base}/event`)
+    let eventPath: string
+    
+    if (this.baseURL.includes('/api/servers/') && this.baseURL.includes('/proxy')) {
+      eventPath = this.baseURL.replace('/proxy', '/event')
+    } else if (this.baseURL.startsWith('http')) {
+      eventPath = `${this.baseURL}/event`
+    } else {
+      eventPath = `${this.baseURL}/event`
+    }
+    
+    const base = eventPath.startsWith('http') 
+      ? eventPath 
+      : `${window.location.origin}${eventPath}`
+    const url = new URL(base)
     if (this.directory) {
       url.searchParams.set('directory', this.directory)
     }

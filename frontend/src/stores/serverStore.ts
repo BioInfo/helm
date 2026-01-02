@@ -138,7 +138,7 @@ export const useSelectedServerUrl = (): string | null => {
   return useServerStore((state) => {
     const { servers, selectedServerId } = state
     const server = servers.find(s => s.id === selectedServerId)
-    return server ? `http://localhost:${server.port}` : null
+    return server ? `/api/servers/${server.id}/proxy` : null
   })
 }
 
@@ -159,7 +159,7 @@ export const useServerUrlForDirectory = (directory: string | undefined): string 
     if (!directory) {
       const { servers, selectedServerId } = state
       const server = servers.find(s => s.id === selectedServerId)
-      return server ? `http://localhost:${server.port}` : null
+      return server ? `/api/servers/${server.id}/proxy` : null
     }
     const { servers } = state
     const matchingServer = servers.find(s => 
@@ -167,6 +167,6 @@ export const useServerUrlForDirectory = (directory: string | undefined): string 
       directory.startsWith(s.workdir + '/') ||
       s.workdir.startsWith(directory + '/')
     )
-    return matchingServer ? `http://localhost:${matchingServer.port}` : null
+    return matchingServer ? `/api/servers/${matchingServer.id}/proxy` : null
   })
 }

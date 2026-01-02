@@ -109,12 +109,33 @@ export async function initLocalRepo(
   branch?: string
 ): Promise<Repo> {
   const normalizedPath = localPath.trim().replace(/\/+$/, '')
-  const fullPath = path.resolve(getReposPath(), normalizedPath)
+  const isExternalPath = normalizedPath.startsWith('/')
+  const fullPath = isExternalPath ? normalizedPath : path.resolve(getReposPath(), normalizedPath)
   
   const existing = db.getRepoByLocalPath(database, normalizedPath)
   if (existing) {
     logger.info(`Local repo already exists in database: ${normalizedPath}`)
     return existing
+  }
+  
+  if (isExternalPath) {
+    const dirExists = await fileExists(fullPath)
+    if (!dirExists) {
+      throw new Error(`External directory does not exist: ${fullPath}`)
+    }
+    
+    const createRepoInput: CreateRepoInput = {
+      localPath: normalizedPath,
+      branch: branch || undefined,
+      defaultBranch: branch || 'main',
+      cloneStatus: 'ready',
+      clonedAt: Date.now(),
+      isLocal: true,
+    }
+    
+    const repo = db.createRepo(database, createRepoInput)
+    logger.info(`Registered external repo: ${normalizedPath} (id: ${repo.id})`)
+    return repo
   }
   
   const createRepoInput: CreateRepoInput = {
