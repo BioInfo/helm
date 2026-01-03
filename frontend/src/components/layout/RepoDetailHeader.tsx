@@ -32,7 +32,7 @@ export function RepoDetailHeader({
   const isNotMainBranch = currentBranch && currentBranch !== "main" && currentBranch !== "master"
 
   return (
-    <div className="flex-shrink-0 z-10 border-b border-border bg-gradient-to-b from-background via-background to-background backdrop-blur-sm px-4 py-2">
+    <div className="flex-shrink-0 z-10 bg-gradient-to-b from-background via-background to-background backdrop-blur-sm px-4 py-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <BackButton />
@@ -47,7 +47,6 @@ export function RepoDetailHeader({
                 isWorktree={isWorktree}
                 repoUrl={repoUrl}
                 className="hidden sm:flex w-[140px] max-w-[140px]"
-                iconOnly
               />
             ) : branchToDisplay ? (
               <Badge

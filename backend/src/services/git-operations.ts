@@ -3,7 +3,7 @@ import { logger } from '../utils/logger'
 import { SettingsService } from './settings'
 import type { Db } from '../db/schema'
 import path from 'path'
-import { createGitHubGitEnv, createNoPromptGitEnv } from '../utils/git-auth'
+import { createGitEnv, createNoPromptGitEnv } from '../utils/git-auth'
 
 async function hasCommits(repoPath: string): Promise<boolean> {
   try {
@@ -18,15 +18,11 @@ function getGitEnvironment(database: Db): Record<string, string> {
   try {
     const settingsService = new SettingsService(database)
     const settings = settingsService.getSettings('default')
-    const gitToken = settings.preferences.gitToken
+    const gitCredentials = settings.preferences.gitCredentials || []
 
-    if (gitToken) {
-      return createGitHubGitEnv(gitToken)
-    }
-
-    return createNoPromptGitEnv()
+    return createGitEnv(gitCredentials)
   } catch (error) {
-    logger.warn('Failed to get git token from settings:', error)
+    logger.warn('Failed to get git credentials from settings:', error)
     return createNoPromptGitEnv()
   }
 }

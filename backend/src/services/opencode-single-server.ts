@@ -1,10 +1,11 @@
 import { spawn, execSync } from 'child_process'
 import path from 'path'
 import { logger } from '../utils/logger'
-import { createGitHubGitEnv, createNoPromptGitEnv } from '../utils/git-auth'
+import { createGitEnv, createGitIdentityEnv, resolveGitIdentity } from '../utils/git-auth'
 import { SettingsService } from './settings'
 import { getWorkspacePath, getOpenCodeConfigFilePath, ENV } from '@helm/shared/config/env'
 import type { Db } from '../db/schema'
+import type { GitCredential } from '../utils/git-auth'
 
 const OPENCODE_SERVER_PORT = ENV.OPENCODE.PORT
 const OPENCODE_SERVER_DIRECTORY = getWorkspacePath()
@@ -54,18 +55,25 @@ class OpenCodeServerManager {
     }
 
     const isDevelopment = ENV.SERVER.NODE_ENV !== 'production'
-    
-    let gitToken = ''
+
+    let gitCredentials: GitCredential[] = []
+    let gitIdentityEnv: Record<string, string> = {}
     if (this.db) {
       try {
         const settingsService = new SettingsService(this.db)
         const settings = settingsService.getSettings('default')
-        gitToken = settings.preferences.gitToken || ''
+        gitCredentials = settings.preferences.gitCredentials || []
+        
+        const identity = await resolveGitIdentity(settings.preferences.gitIdentity, gitCredentials)
+        if (identity) {
+          gitIdentityEnv = createGitIdentityEnv(identity)
+          logger.info(`Git identity resolved: ${identity.name} <${identity.email}>`)
+        }
       } catch (error) {
-        logger.warn('Failed to get git token from settings:', error)
+        logger.warn('Failed to get git settings:', error)
       }
     }
-    
+
     const existingProcesses = await this.findProcessesByPort(OPENCODE_SERVER_PORT)
     if (existingProcesses.length > 0) {
       logger.info(`OpenCode server already running on port ${OPENCODE_SERVER_PORT}`)
@@ -105,7 +113,7 @@ class OpenCodeServerManager {
     logger.info(`OpenCode XDG_CONFIG_HOME: ${path.join(OPENCODE_SERVER_DIRECTORY, '.config')}`)
     logger.info(`OpenCode will use ?directory= parameter for session isolation`)
 
-    const gitEnv = gitToken ? createGitHubGitEnv(gitToken) : createNoPromptGitEnv()
+    const gitEnv = createGitEnv(gitCredentials)
 
     let stderrOutput = ''
 
@@ -119,6 +127,7 @@ class OpenCodeServerManager {
         env: {
           ...process.env,
           ...gitEnv,
+          ...gitIdentityEnv,
           XDG_DATA_HOME: path.join(OPENCODE_SERVER_DIRECTORY, '.opencode/state'),
           XDG_CONFIG_HOME: path.join(OPENCODE_SERVER_DIRECTORY, '.config'),
           OPENCODE_CONFIG: OPENCODE_CONFIG_PATH,

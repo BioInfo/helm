@@ -1,13 +1,5 @@
 @import "tailwindcss";
 
-* {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-code, pre, .font-mono {
-  font-family: 'JetBrains Mono', 'SF Mono', Monaco, 'Cascadia Code', monospace;
-}
-
 @theme {
   --color-background: #0a0a0a;
   --color-foreground: #fafafa;
@@ -142,18 +134,14 @@ body {
 }
 
 .prose-enhanced {
-  font-size: 0.9375rem;
-  line-height: 1.65;
-  letter-spacing: -0.01em;
+  line-height: 1.7;
   word-break: break-word;
   overflow-wrap: break-word;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 .prose-enhanced p {
-  margin-top: 0.75em;
-  margin-bottom: 0.75em;
+  margin-top: 1em;
+  margin-bottom: 1em;
 }
 
 .prose-enhanced h1,
@@ -174,15 +162,14 @@ body {
 
 .prose-enhanced ul,
 .prose-enhanced ol {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-  padding-left: 1.25em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding-left: 1.5em;
 }
 
 .prose-enhanced li {
-  margin-top: 0.25em;
-  margin-bottom: 0.25em;
-  line-height: 1.6;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 
 .prose-enhanced strong {
@@ -228,25 +215,43 @@ body {
 }
 
 .prose-enhanced pre {
-  margin-top: 1em;
-  margin-bottom: 1em;
-  padding: 0.875rem;
-  font-size: 0.8125rem;
-  line-height: 1.5;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
   white-space: pre-wrap;
   word-break: break-word;
-  border-radius: 0.5rem;
 }
 
 .prose-enhanced code {
-  font-size: 0.85em;
   word-break: break-all;
 }
 
-.prose-enhanced :not(pre) > code {
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
-  background: var(--color-accent);
+.prose-enhanced .table-wrapper {
+  overflow-x: auto;
+  margin: 1em 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose-enhanced table {
+  border-collapse: collapse;
+  min-width: 100%;
+  font-size: 0.875rem;
+}
+
+.prose-enhanced th,
+.prose-enhanced td {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.prose-enhanced th {
+  background-color: var(--color-accent);
+  font-weight: 600;
+}
+
+.prose-enhanced tr:nth-child(even) {
+  background-color: var(--color-accent);
 }
 
 @media (max-width: 640px) {
@@ -256,6 +261,12 @@ body {
   }
   
   .prose-enhanced code {
+    font-size: 0.75rem;
+  }
+
+  .prose-enhanced th,
+  .prose-enhanced td {
+    padding: 0.375rem 0.5rem;
     font-size: 0.75rem;
   }
 }

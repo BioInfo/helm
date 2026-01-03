@@ -297,6 +297,13 @@ export function TextPart({ part }: TextPartProps) {
           },
           li({ children }) {
             return <li className="text-foreground my-0.5 md:my-1">{children}</li>
+          },
+          table({ children }) {
+            return (
+              <div className="table-wrapper">
+                <table>{children}</table>
+              </div>
+            )
           }
         }}
       >

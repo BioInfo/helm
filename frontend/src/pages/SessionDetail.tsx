@@ -11,7 +11,7 @@ import { SessionList } from "@/components/session/SessionList";
 
 import { FileBrowserSheet } from "@/components/file-browser/FileBrowserSheet";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useSession, useAbortSession, useUpdateSession, useMessages } from "@/hooks/useOpenCode";
+import { useSession, useAbortSession, useUpdateSession, useMessages, useTitleGenerating } from "@/hooks/useOpenCode";
 import { API_BASE_URL } from "@/config";
 import { useServerUrlForDirectory } from "@/stores/serverStore";
 import { useSSE } from "@/hooks/useSSE";
@@ -118,6 +118,7 @@ export function SessionDetail() {
   const { isConnected, isReconnecting } = useSSE(opcodeUrl, repoDirectory);
   const abortSession = useAbortSession(opcodeUrl, repoDirectory, sessionId);
   const updateSession = useUpdateSession(opcodeUrl, repoDirectory);
+  const isTitleGenerating = useTitleGenerating(sessionId);
   const { open: openSettings } = useSettingsDialog();
   const { modelString } = useModelSelection(opcodeUrl, repoDirectory);
   const isEditingMessage = useUIState((state) => state.isEditingMessage);
@@ -255,6 +256,7 @@ export function SessionDetail() {
         opcodeUrl={opcodeUrl}
         repoDirectory={repoDirectory}
         parentSessionId={session?.parentID}
+        isTitleGenerating={isTitleGenerating}
         onFileBrowserOpen={() => setFileBrowserOpen(true)}
         onSettingsOpen={openSettings}
         onMcpDialogOpen={() => setMcpDialogOpen(true)}

@@ -21,6 +21,18 @@ export interface CustomAgent {
   config: Record<string, unknown>
 }
 
+export interface GitCredential {
+  name: string
+  host: string
+  token: string
+  username?: string
+}
+
+export interface GitIdentity {
+  name: string
+  email: string
+}
+
 export interface UserPreferences {
   theme: 'dark' | 'light' | 'system'
   mode: 'plan' | 'build'
@@ -33,7 +45,8 @@ export interface UserPreferences {
   keyboardShortcuts: Record<string, string>
   customCommands: CustomCommand[]
   customAgents: CustomAgent[]
-  gitToken?: string
+  gitCredentials?: GitCredential[]
+  gitIdentity?: GitIdentity
   tts?: TTSConfig
 }
 

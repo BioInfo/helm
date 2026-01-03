@@ -29,7 +29,9 @@ vi.mock('../../src/services/settings', () => ({
   SettingsService: vi.fn().mockImplementation(() => ({
     getSettings: () => ({
       preferences: {
-        gitToken: 'ghp_test_token',
+        gitCredentials: [
+          { name: 'GitHub', host: 'https://github.com/', token: 'ghp_test_token' }
+        ],
       },
       updatedAt: Date.now(),
     }),

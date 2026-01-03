@@ -9,7 +9,6 @@
     "build": "npx tsc --outDir dist",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
     "test:watch": "vitest --watch"
   },
   "dependencies": {

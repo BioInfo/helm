@@ -6,8 +6,9 @@ import { useSettings } from '@/hooks/useSettings'
 import { useTTS } from '@/hooks/useTTS'
 import { useTTSModels, useTTSVoices, useTTSDiscovery } from '@/hooks/useTTSDiscovery'
 import { getAvailableVoiceNames, isWebSpeechSupported } from '@/lib/webSpeechSynthesizer'
-import { Loader2, Volume2, Square, XCircle, RefreshCw, MonitorSpeaker, Globe, CheckCircle2 } from 'lucide-react'
+import { Loader2, Volume2, XCircle, RefreshCw, MonitorSpeaker, Globe, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SquareFill } from '@/components/ui/square-fill'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
@@ -642,7 +643,7 @@ export function TTSSettings() {
                     </>
                   ) : isPlaying ? (
                     <>
-                      <Square className="h-4 w-4 mr-2" />
+                      <SquareFill className="h-4 w-4 mr-2" />
                       Stop
                     </>
                   ) : (

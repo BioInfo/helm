@@ -147,9 +147,54 @@ export function runMigrations(db: Db): void {
       logger.error('Failed to create remote_servers table:', error)
     }
     
+    migrateGitTokenToCredentials(db)
     logger.info('Database migrations completed successfully')
   } catch (error) {
     logger.error('Failed to run database migrations:', error)
     throw error
+  }
+}
+
+function migrateGitTokenToCredentials(db: Database): void {
+  try {
+    const rows = db.prepare('SELECT user_id, preferences FROM user_preferences').all() as Array<{
+      user_id: string
+      preferences: string
+    }>
+
+    for (const row of rows) {
+      try {
+        const parsed = JSON.parse(row.preferences) as Record<string, unknown>
+        const gitToken = parsed.gitToken as string | undefined
+        const existingCredentials = parsed.gitCredentials as Array<unknown> | undefined
+
+        if (!gitToken) {
+          continue
+        }
+
+        if (existingCredentials && existingCredentials.length > 0) {
+          continue
+        }
+
+        const { gitToken: _, ...rest } = parsed
+        const migrated = {
+          ...rest,
+          gitCredentials: [{
+            name: 'GitHub',
+            host: 'https://github.com/',
+            token: gitToken,
+          }],
+        }
+
+        db.prepare('UPDATE user_preferences SET preferences = ? WHERE user_id = ?')
+          .run(JSON.stringify(migrated), row.user_id)
+
+        logger.info(`Migrated gitToken to gitCredentials for user: ${row.user_id}`)
+      } catch (parseError) {
+        logger.error(`Failed to parse preferences for user ${row.user_id}:`, parseError)
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to migrate gitToken to gitCredentials:', error)
   }
 }

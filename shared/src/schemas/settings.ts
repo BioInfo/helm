@@ -60,6 +60,27 @@ export const DEFAULT_KEYBOARD_SHORTCUTS: Record<string, string> = {
   selectModel: `${CMD_KEY}+M`,
 };
 
+export const GitCredentialSchema = z.object({
+  name: z.string(),
+  host: z.string(),
+  token: z.string(),
+  username: z.string().optional(),
+});
+
+export type GitCredential = z.infer<typeof GitCredentialSchema>;
+
+export const GitIdentitySchema = z.object({
+  name: z.string(),
+  email: z.string(),
+});
+
+export type GitIdentity = z.infer<typeof GitIdentitySchema>;
+
+export const DEFAULT_GIT_IDENTITY: GitIdentity = {
+  name: 'OpenCode Agent',
+  email: '',
+};
+
 export const UserPreferencesSchema = z.object({
   theme: z.enum(["dark", "light", "system"]),
   mode: z.enum(["plan", "build"]),
@@ -72,7 +93,8 @@ export const UserPreferencesSchema = z.object({
   keyboardShortcuts: z.record(z.string(), z.string()),
   customCommands: z.array(CustomCommandSchema),
   customAgents: z.array(CustomAgentSchema),
-  gitToken: z.string().optional(),
+  gitCredentials: z.array(GitCredentialSchema).optional(),
+  gitIdentity: GitIdentitySchema.optional(),
   tts: TTSConfigSchema.optional(),
   lastKnownGoodConfig: z.string().optional(),
 });
@@ -101,7 +123,8 @@ export const DEFAULT_USER_PREFERENCES = {
   keyboardShortcuts: DEFAULT_KEYBOARD_SHORTCUTS,
   customCommands: [],
   customAgents: [],
-  gitToken: undefined,
+  gitCredentials: [] as GitCredential[],
+  gitIdentity: DEFAULT_GIT_IDENTITY,
   tts: DEFAULT_TTS_CONFIG,
 };
 

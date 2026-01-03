@@ -66,22 +66,21 @@ export function RepoCard({
       }`}
     >
       <div className="p-4">
-        <div className="flex items-start gap-3">
-          {onSelect && (
-            <div 
-              className="pt-0.5"
-              onClick={(e) => handleActionClick(e, () => onSelect(repo.id, !isSelected))}
-            >
-              <Checkbox
-                checked={isSelected}
-                onCheckedChange={(checked) => onSelect(repo.id, checked === true)}
-                className="w-5 h-5"
-              />
-            </div>
-          )}
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+        <div>
+          <div className="flex items-start gap-3 mb-1">
+            {onSelect && (
+              <div 
+                onClick={(e) => handleActionClick(e, () => onSelect(repo.id, !isSelected))}
+              >
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={(checked) => onSelect(repo.id, checked === true)}
+                  className="w-5 h-5"
+                />
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
               <h3 className="font-semibold text-base text-foreground truncate">
                 {repoName}
               </h3>
@@ -91,8 +90,10 @@ export function RepoCard({
                 </Badge>
               )}
             </div>
-            
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex flex-1 items-center gap-3">
               {isCloning ? (
                 <span className="flex items-center gap-1.5">
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
@@ -113,56 +114,56 @@ export function RepoCard({
                 </>
               )}
             </div>
-          </div>
 
-          <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-            <BranchSwitcher
-              repoId={repo.id}
-              currentBranch={branchToDisplay || ""}
-              isWorktree={repo.isWorktree}
-              repoUrl={repo.repoUrl}
-              repoLocalPath={repo.localPath}
-              iconOnly={true}
-              className="h-8 w-8"
-            />
+            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+              <BranchSwitcher
+                repoId={repo.id}
+                currentBranch={branchToDisplay || ""}
+                isWorktree={repo.isWorktree}
+                repoUrl={repo.repoUrl}
+                repoLocalPath={repo.localPath}
+                iconOnly={true}
+                className="h-8 w-8"
+              />
 
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={(e) => handleActionClick(e, async () => {
-                setIsDownloading(true);
-                try {
-                  await downloadRepo(repo.id, repoName);
-                  showToast.success("Download complete");
-                } catch (error: unknown) {
-                  showToast.error(error instanceof Error ? error.message : "Download failed");
-                } finally {
-                  setIsDownloading(false);
-                }
-              })}
-              disabled={!isReady || isDownloading}
-              className="h-8 w-8 p-0"
-            >
-              {isDownloading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Download className="w-4 h-4" />
-              )}
-            </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={(e) => handleActionClick(e, async () => {
+                  setIsDownloading(true);
+                  try {
+                    await downloadRepo(repo.id, repoName);
+                    showToast.success("Download complete");
+                  } catch (error: unknown) {
+                    showToast.error(error instanceof Error ? error.message : "Download failed");
+                  } finally {
+                    setIsDownloading(false);
+                  }
+                })}
+                disabled={!isReady || isDownloading}
+                className="h-8 w-8 p-0"
+              >
+                {isDownloading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+              </Button>
 
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={(e) => handleActionClick(e, () => onDelete(repo.id))}
-              disabled={isDeleting}
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              {isDeleting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-            </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={(e) => handleActionClick(e, () => onDelete(repo.id))}
+                disabled={isDeleting}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

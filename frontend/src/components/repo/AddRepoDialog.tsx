@@ -102,7 +102,7 @@ export function AddRepoDialog({ open, onOpenChange }: AddRepoDialogProps) {
                  className="bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder:text-zinc-500"
                />
                <p className="text-xs text-zinc-500">
-                 Full URL or GitHub shorthand format (owner/repo)
+                 Full URL or shorthand format (owner/repo for GitHub)
                </p>
              </div>
           ) : (
