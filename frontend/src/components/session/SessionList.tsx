@@ -1,13 +1,14 @@
 import { useState, useMemo } from "react";
-import { useSessions, useDeleteSession } from "@/hooks/useOpenCode";
+import { useSessions, useDeleteSession, useUpdateSession } from "@/hooks/useOpenCode";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DeleteSessionDialog } from "./DeleteSessionDialog";
-import { Trash2, Clock, Search, MoreVertical } from "lucide-react";
+import { Trash2, Clock, Search, MoreVertical, Pencil, Check, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { showToast } from "@/lib/toast";
 
 interface SessionListProps {
   opcodeUrl: string;
@@ -24,6 +25,8 @@ export const SessionList = ({
 }: SessionListProps) => {
   const { data: sessions, isLoading } = useSessions(opcodeUrl, directory);
   const deleteSession = useDeleteSession(opcodeUrl, directory);
+  const updateSession = useUpdateSession(opcodeUrl, directory);
+  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<
     string | string[] | null
@@ -32,6 +35,10 @@ export const SessionList = ({
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(
     new Set(),
   );
+  
+  // Renaming state
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
 
   const filteredSessions = useMemo(() => {
     if (!sessions) return [];
@@ -119,6 +126,53 @@ export const SessionList = ({
     }
   };
 
+  const startEditing = (sessionId: string, currentTitle: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingSessionId(sessionId);
+    setEditTitle(currentTitle || "Untitled Session");
+  };
+
+  const cancelEditing = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setEditingSessionId(null);
+    setEditTitle("");
+  };
+
+  const saveEditing = async (sessionId: string, e: React.MouseEvent | React.FormEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (!editTitle.trim()) {
+      showToast.error("Session title cannot be empty");
+      return;
+    }
+
+    try {
+      await updateSession.mutateAsync({
+        sessionID: sessionId,
+        title: editTitle.trim()
+      });
+      showToast.success("Session renamed successfully");
+      setEditingSessionId(null);
+      setEditTitle("");
+    } catch (error) {
+      showToast.error("Failed to rename session");
+      console.error(error);
+    }
+  };
+
+  const handleKeyDown = (sessionId: string, e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.stopPropagation();
+      saveEditing(sessionId, e);
+    } else if (e.key === 'Escape') {
+      e.stopPropagation();
+      cancelEditing();
+    } else if (e.key === ' ') {
+      e.stopPropagation(); // Prevent space from selecting/deselecting if that's a thing
+    }
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="p-4 flex-shrink-0">
@@ -184,6 +238,19 @@ export const SessionList = ({
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete ({selectedSessions.size})
               </DropdownMenuItem>
+              {activeSessionID && (
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    const session = sessions?.find(s => s.id === activeSessionID);
+                    if (session) {
+                      startEditing(session.id, session.title || "", e as any);
+                    }
+                  }}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Rename Active
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -221,9 +288,45 @@ export const SessionList = ({
                       className="w-5 h-5 flex-shrink-0 mt-0.5"
                     />
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-foreground truncate">
-                        {session.title || "Untitled Session"}
-                      </h3>
+                      {editingSessionId === session.id ? (
+                        <div className="flex items-center gap-2 mr-2" onClick={(e) => e.stopPropagation()}>
+                          <Input
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(session.id, e)}
+                            className="h-7 text-sm py-0 px-2"
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-100 dark:hover:bg-green-900/30"
+                            onClick={(e) => saveEditing(session.id, e)}
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={(e) => cancelEditing(e)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <h3 className="text-sm font-medium text-foreground truncate group flex items-center gap-2">
+                          <span className="truncate">{session.title || "Untitled Session"}</span>
+                          <button
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50"
+                            onClick={(e) => startEditing(session.id, session.title || "", e)}
+                            title="Rename"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        </h3>
+                      )}
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />

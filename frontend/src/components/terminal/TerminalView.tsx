@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
+import { WebglAddon } from '@xterm/addon-webgl'
 import { Loader2, AlertCircle, RefreshCw, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -173,6 +174,7 @@ export function TerminalView({ serverId, workdir, className, onClose }: Terminal
       cursorBlink: true,
       fontSize: 14,
       fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+      letterSpacing: 0,
       theme: {
         background: '#1a1b26',
         foreground: '#c0caf5',
@@ -202,6 +204,17 @@ export function TerminalView({ serverId, workdir, className, onClose }: Terminal
     const fitAddon = new FitAddon()
     terminal.loadAddon(fitAddon)
     terminal.open(containerRef.current)
+    
+    try {
+      const webglAddon = new WebglAddon()
+      webglAddon.onContextLoss(() => {
+        webglAddon.dispose()
+      })
+      terminal.loadAddon(webglAddon)
+    } catch (e) {
+      console.warn('WebGL addon failed to load, using canvas renderer:', e)
+    }
+    
     fitAddon.fit()
 
     terminalRef.current = terminal

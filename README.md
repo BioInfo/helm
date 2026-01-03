@@ -29,6 +29,12 @@ Helm is a fork of [chriswritescode-dev/opencode-web](https://github.com/chriswri
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## Requirements
+
+- **Node.js** 20+ 
+- **pnpm** 9+
+- **OpenCode** CLI (`npm install -g @anthropics/opencode`)
+
 ## Quick Start
 
 ### Native (Recommended)
@@ -46,7 +52,8 @@ pnpm install
 # Run
 pnpm dev
 
-# Open http://localhost:5001
+# Open http://localhost:5173 (frontend dev server)
+# API available at http://localhost:5001
 ```
 
 Then start OpenCode in your project directories:
@@ -65,7 +72,7 @@ Helm auto-discovers all running instances and lets you switch between them.
 pnpm dev
 
 # On your iPhone via Tailscale
-# Navigate to http://your-mac.tailnet:5001
+# Navigate to http://your-mac.tailnet:5173
 ```
 
 ### With Docker (Isolated/Single-Server)
@@ -128,9 +135,10 @@ docker-compose up -d
 
 | Document | Purpose |
 |----------|---------|
-| [docs/PRD.md](./docs/PRD.md) | Product requirements & architecture |
-| [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Implementation progress tracker |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution guidelines |
+| [SECURITY.md](./SECURITY.md) | Security policy |
 | [AGENTS.md](./AGENTS.md) | Development context for AI agents |
+| [docs/PRD.md](./docs/PRD.md) | Product requirements & architecture |
 
 ## Troubleshooting
 
