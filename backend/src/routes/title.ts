@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { logger } from '../utils/logger'
-import { ENV } from '@opencode-manager/shared/config/env'
+import { ENV } from '@helm/shared/config/env'
 
 const TitleRequestSchema = z.object({
   text: z.string().min(1).max(5000),
