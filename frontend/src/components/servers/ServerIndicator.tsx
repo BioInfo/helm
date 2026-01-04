@@ -50,11 +50,11 @@ export function ServerIndicator() {
           <ChevronDown className="w-3 h-3" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-sm p-0 max-h-[80vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-sm p-0 overflow-hidden">
         <DialogHeader className="sr-only">
           <DialogTitle>Select OpenCode Server</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="max-h-[70vh] overflow-y-auto">
           <ServerPicker onServerSelect={() => setOpen(false)} />
         </div>
       </DialogContent>

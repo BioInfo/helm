@@ -67,8 +67,8 @@ export function ServerPicker({ onServerSelect }: ServerPickerProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-3 border-b">
+    <div className="flex flex-col">
+      <div className="flex items-center justify-between p-3 border-b sticky top-0 bg-background z-10">
         <h2 className="font-semibold text-sm">OpenCode Servers</h2>
         <Button 
           variant="ghost" 
@@ -81,7 +81,7 @@ export function ServerPicker({ onServerSelect }: ServerPickerProps) {
         </Button>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
+      <div className="p-3 space-y-2">
         {isLoading && servers.length === 0 ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
