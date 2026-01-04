@@ -165,6 +165,9 @@ export function FileBrowser({ basePath = '', onFileSelect, embedded = false, ini
   const getFileContentUrl = useCallback((relativePath: string) => {
     if (selectedServer) {
       const workdir = selectedServer.workdir.replace(/\/$/, '')
+      if (relativePath.startsWith(workdir + '/') || relativePath === workdir) {
+        return `${API_BASE_URL}/api/files/${relativePath}`
+      }
       const cleanPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`
       const absolutePath = `${workdir}${cleanPath}`
       return `${API_BASE_URL}/api/files/${absolutePath}`
