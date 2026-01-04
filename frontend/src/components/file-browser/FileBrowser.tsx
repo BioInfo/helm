@@ -34,6 +34,7 @@ interface FileBrowserProps {
   embedded?: boolean
   initialSelectedFile?: string
   onDirectoryLoad?: (info: { workspaceRoot?: string; currentPath: string }) => void
+  readOnly?: boolean
 }
 
 async function readFileEntry(entry: FileSystemFileEntry): Promise<File> {
@@ -116,7 +117,7 @@ function getUploadItemsFromFileList(fileList: FileList): UploadItem[] {
   return items
 }
 
-export function FileBrowser({ basePath = '', onFileSelect, embedded = false, initialSelectedFile, onDirectoryLoad }: FileBrowserProps) {
+export function FileBrowser({ basePath = '', onFileSelect, embedded = false, initialSelectedFile, onDirectoryLoad, readOnly: readOnlyProp }: FileBrowserProps) {
   const [currentPath, setCurrentPath] = useState(basePath)
   const [files, setFiles] = useState<FileInfo | null>(null)
   const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null)
@@ -134,6 +135,8 @@ export function FileBrowser({ basePath = '', onFileSelect, embedded = false, ini
   const serverForDirectory = useServerForDirectory(basePath)
   const globalSelectedServer = useSelectedServer()
   const selectedServer = serverForDirectory || globalSelectedServer
+  
+  const isReadOnly = readOnlyProp ?? !!selectedServer
   
   const getDirectoryApiUrl = useCallback((path: string) => {
     if (selectedServer) {
@@ -489,12 +492,12 @@ useEffect(() => {
       <div 
         className="h-full flex flex-col bg-background"
         ref={dropZoneRef}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
+        onDragEnter={isReadOnly ? undefined : handleDragEnter}
+        onDragLeave={isReadOnly ? undefined : handleDragLeave}
+        onDragOver={isReadOnly ? undefined : handleDragOver}
+        onDrop={isReadOnly ? undefined : handleDrop}
       >
-        {isDragging && (
+        {!isReadOnly && isDragging && (
           <div className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center">
             <div className="text-center">
               <Upload className="w-12 h-12 mx-auto mb-2 text-primary" />
@@ -503,7 +506,7 @@ useEffect(() => {
           </div>
         )}
         
-        {uploadDialog}
+        {!isReadOnly && uploadDialog}
         
         {/* Mobile: Full width file listing, Desktop: Split view */}
         <div className="flex-1 flex overflow-hidden min-h-0 h-full">
@@ -518,11 +521,13 @@ useEffect(() => {
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="w-4 h-4" />
               </Button>
-              <FileOperations
-                onUpload={handleUpload}
-                onCreate={handleCreateFile}
-                
-              />
+              {!isReadOnly && (
+                <FileOperations
+                  onUpload={handleUpload}
+                  onCreate={handleCreateFile}
+                  
+                />
+              )}
             </div>
             
             {error && (
@@ -542,8 +547,8 @@ useEffect(() => {
                   onFileSelect={handleFileSelect}
                   onDirectoryClick={handleDirectoryClick}
                   selectedFile={selectedFile}
-                  onDelete={handleDelete}
-                  onRename={handleRename}
+                  onDelete={isReadOnly ? undefined : handleDelete}
+                  onRename={isReadOnly ? undefined : handleRename}
                   currentPath={currentPath}
                   basePath={basePath}
                 />
@@ -580,13 +585,13 @@ useEffect(() => {
     <div 
       className="h-full flex flex-col"
       ref={dropZoneRef}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
+      onDragEnter={isReadOnly ? undefined : handleDragEnter}
+      onDragLeave={isReadOnly ? undefined : handleDragLeave}
+      onDragOver={isReadOnly ? undefined : handleDragOver}
+      onDrop={isReadOnly ? undefined : handleDrop}
     >
       <Card className="flex-1 relative">
-        {isDragging && (
+        {!isReadOnly && isDragging && (
           <div className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center">
             <div className="text-center">
               <Upload className="w-12 h-12 mx-auto mb-2 text-primary" />
@@ -623,11 +628,13 @@ useEffect(() => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
               />
-              <FileOperations
-                onUpload={handleUpload}
-                onCreate={handleCreateFile}
-                
-              />
+              {!isReadOnly && (
+                <FileOperations
+                  onUpload={handleUpload}
+                  onCreate={handleCreateFile}
+                  
+                />
+              )}
             </div>
             
             {loading ? (
@@ -641,8 +648,8 @@ useEffect(() => {
                   onFileSelect={handleFileSelect}
                   onDirectoryClick={handleDirectoryClick}
                   selectedFile={selectedFile}
-                  onDelete={handleDelete}
-                  onRename={handleRename}
+                  onDelete={isReadOnly ? undefined : handleDelete}
+                  onRename={isReadOnly ? undefined : handleRename}
                   currentPath={currentPath}
                   basePath={basePath}
                 />
@@ -672,7 +679,7 @@ useEffect(() => {
         file={selectedFile}
       />
       
-      {uploadDialog}
+      {!isReadOnly && uploadDialog}
     </div>
   )
 }
