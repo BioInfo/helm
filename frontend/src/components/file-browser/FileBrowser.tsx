@@ -149,7 +149,14 @@ export function FileBrowser({ basePath = '', onFileSelect, embedded = false, ini
   
   const getDirectoryApiUrl = useCallback((path: string) => {
     if (selectedServer) {
-      const encodedPath = encodeURIComponent(path || '/')
+      const workdir = selectedServer.workdir.replace(/\/$/, '')
+      let relativePath = path
+      if (path === workdir || path === '') {
+        relativePath = '/'
+      } else if (path.startsWith(workdir + '/')) {
+        relativePath = path.slice(workdir.length) || '/'
+      }
+      const encodedPath = encodeURIComponent(relativePath || '/')
       return `${API_BASE_URL}/api/servers/${selectedServer.id}/files?path=${encodedPath}`
     }
     return `${API_BASE_URL}/api/files/${path}`
