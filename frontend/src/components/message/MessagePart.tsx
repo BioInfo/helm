@@ -163,7 +163,9 @@ export const MessagePart = memo(function MessagePart({ part, role, allParts, par
       )
     case 'retry':
       return <RetryPart part={part as RetryPartType} />
+    case 'step-start':
+      return null
     default:
-      return 
+      return null
   }
 })

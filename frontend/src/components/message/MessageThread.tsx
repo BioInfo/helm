@@ -187,19 +187,29 @@ export const MessageThread = memo(function MessageThread({
                     isEditable={true}
                   />
                 ) : (
-                  msg.parts.map((part, partIndex) => (
-                    <div key={`${msg.info.id}-${part.id}-${partIndex}`}>
-                      <MessagePart 
-                        part={part} 
-                        role={msg.info.role}
-                        allParts={msg.parts}
-                        partIndex={partIndex}
-                        onFileClick={onFileClick}
-                        onChildSessionClick={onChildSessionClick}
-                        messageTextContent={msg.info.role === 'assistant' ? messageTextContent : undefined}
-                      />
-                    </div>
-                  ))
+                  <>
+                    {msg.parts.map((part, partIndex) => (
+                      <div key={`${msg.info.id}-${part.id}-${partIndex}`}>
+                        <MessagePart 
+                          part={part} 
+                          role={msg.info.role}
+                          allParts={msg.parts}
+                          partIndex={partIndex}
+                          onFileClick={onFileClick}
+                          onChildSessionClick={onChildSessionClick}
+                          messageTextContent={msg.info.role === 'assistant' ? messageTextContent : undefined}
+                        />
+                      </div>
+                    ))}
+                    {msg.parts.length === 0 && 'error' in msg.info && msg.info.error && (
+                      <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                        <div className="font-medium text-red-500">{(msg.info.error as { name: string }).name || 'Error'}</div>
+                        <div className="text-red-400/80 mt-1">
+                          {((msg.info.error as { data?: { message?: string } }).data?.message) || 'An error occurred'}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
