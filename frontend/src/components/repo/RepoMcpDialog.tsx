@@ -130,7 +130,7 @@ export function RepoMcpDialog({ open, onOpenChange, config, directory }: RepoMcp
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent mobileFullscreen className="sm:max-w-[400px] sm:max-h-[80vh] flex flex-col gap-0 pb-safe">
+      <DialogContent mobileFullscreen className="sm:inset-auto sm:left-[50%] sm:top-[50%] sm:w-[400px] sm:max-w-[400px] sm:h-auto sm:max-h-[80vh] flex flex-col gap-0 pb-safe">
         <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3 shrink-0 ">
           <DialogTitle>MCP for This Location</DialogTitle>
           <DialogDescription>
