@@ -13,7 +13,7 @@ import type { FileInfo } from '@/types/files'
 import { API_BASE_URL } from '@/config'
 import { useMobile } from '@/hooks/useMobile'
 import { useServerFile } from '@/api/files'
-import { useSelectedServer } from '@/stores/serverStore'
+import { useServerForDirectory, useSelectedServer } from '@/stores/serverStore'
 
 interface UploadItem {
   file: File
@@ -131,7 +131,10 @@ export function FileBrowser({ basePath = '', onFileSelect, embedded = false, ini
   const uploadCancelledRef = useRef(false)
   const isMobile = useMobile()
   
-  const selectedServer = useSelectedServer()
+  // Use server matching basePath if provided, otherwise fall back to globally selected server
+  const serverForDirectory = useServerForDirectory(basePath)
+  const globalSelectedServer = useSelectedServer()
+  const selectedServer = basePath ? serverForDirectory : globalSelectedServer
   
   const getDirectoryApiUrl = useCallback((path: string) => {
     if (selectedServer) {
