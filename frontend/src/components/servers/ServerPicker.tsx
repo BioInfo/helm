@@ -81,7 +81,7 @@ export function ServerPicker({ onServerSelect }: ServerPickerProps) {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
         {isLoading && servers.length === 0 ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
