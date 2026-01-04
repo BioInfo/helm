@@ -30,7 +30,7 @@ export function ServerCard({ server, isSelected, onSelect }: ServerCardProps) {
 
     setIsStartingSession(true)
     try {
-      const repo = await findOrCreateRepoForPath(server.workdir)
+      const repo = await findOrCreateRepoForPath(server.workdir, server.isRemote)
       
       const opcodeUrl = `/api/servers/${server.id}/proxy`
       const client = new OpenCodeClient(opcodeUrl, server.workdir)

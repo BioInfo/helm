@@ -111,7 +111,8 @@ function getGitEnv(database: Db): Record<string, string> {
 export async function initLocalRepo(
   database: Db,
   localPath: string,
-  branch?: string
+  branch?: string,
+  skipExistsCheck?: boolean
 ): Promise<Repo> {
   const normalizedPath = localPath.trim().replace(/\/+$/, '')
   const isExternalPath = normalizedPath.startsWith('/')
@@ -124,9 +125,11 @@ export async function initLocalRepo(
   }
   
   if (isExternalPath) {
-    const dirExists = await fileExists(fullPath)
-    if (!dirExists) {
-      throw new Error(`External directory does not exist: ${fullPath}`)
+    if (!skipExistsCheck) {
+      const dirExists = await fileExists(fullPath)
+      if (!dirExists) {
+        throw new Error(`External directory does not exist: ${fullPath}`)
+      }
     }
     
     const createRepoInput: CreateRepoInput = {
@@ -135,7 +138,7 @@ export async function initLocalRepo(
       defaultBranch: branch || 'main',
       cloneStatus: 'ready',
       clonedAt: Date.now(),
-      isLocal: true,
+      isLocal: !skipExistsCheck,
     }
     
     const repo = db.createRepo(database, createRepoInput)
