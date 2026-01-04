@@ -31,26 +31,36 @@ async function discoverAllServers(): Promise<OpenCodeServer[]> {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 3000)
       
-      const healthResponse = await fetch(`http://${config.host}:${config.port}/api/health`, {
+      const sessionResponse = await fetch(`http://${config.host}:${config.port}/session`, {
         signal: controller.signal,
       })
       clearTimeout(timeoutId)
       
-      if (healthResponse.ok) {
+      if (sessionResponse.ok) {
         status = 'healthy'
         updateRemoteServerLastSeen(db, config.id)
+        
+        const sessions = await sessionResponse.json()
+        if (Array.isArray(sessions) && sessions.length > 0) {
+          const sessionWithDir = sessions.find((s: { directory?: string }) => s.directory && s.directory !== 'unknown')
+          workdir = sessionWithDir?.directory || sessions[0].directory || 'unknown'
+          if (workdir && workdir !== 'unknown') {
+            const pathParts = workdir.split('/')
+            projectName = `${config.name} (${pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2]})`
+          }
+        }
       }
     } catch {
       try {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 2000)
         
-        const sessionResponse = await fetch(`http://${config.host}:${config.port}/session`, {
+        const healthResponse = await fetch(`http://${config.host}:${config.port}/api/health`, {
           signal: controller.signal,
         })
         clearTimeout(timeoutId)
         
-        if (sessionResponse.ok || sessionResponse.status === 401) {
+        if (healthResponse.ok) {
           status = 'healthy'
           updateRemoteServerLastSeen(db, config.id)
         }
