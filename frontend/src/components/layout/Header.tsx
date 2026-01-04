@@ -39,19 +39,19 @@ export function Header({ title, backTo, action }: HeaderProps) {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
             <TokenCounter />
             <ToolsIndicator />
             <TerminalIndicator />
             <ServerIndicator />
-            {action && <div>{action}</div>}
+            {action && <div className="shrink-0">{action}</div>}
             <Button
               variant="ghost"
               size="icon"
               onClick={openSettings}
-              className="text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200 shrink-0"
             >
-              <Settings className="w-10 h-10" />
+              <Settings className="w-5 h-5" />
             </Button>
           </div>
         </div>
