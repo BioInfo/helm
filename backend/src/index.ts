@@ -235,7 +235,7 @@ app.route('/api/tts', createTTSRoutes(db))
 app.route('/api/servers', createServersRoutes(db))
 app.route('/api/terminal', createTerminalRoutes())
 app.route('/api/remote-servers', createRemoteServersRoutes(db))
-app.route('/api/generate-title', createTitleRoutes())
+app.route('/api/generate-title', createTitleRoutes(db))
 
 app.all('/api/opencode/*', async (c) => {
   const request = c.req.raw
