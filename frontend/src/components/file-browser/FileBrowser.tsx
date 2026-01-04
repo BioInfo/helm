@@ -131,10 +131,9 @@ export function FileBrowser({ basePath = '', onFileSelect, embedded = false, ini
   const uploadCancelledRef = useRef(false)
   const isMobile = useMobile()
   
-  // Use server matching basePath if provided, otherwise fall back to globally selected server
   const serverForDirectory = useServerForDirectory(basePath)
   const globalSelectedServer = useSelectedServer()
-  const selectedServer = basePath ? serverForDirectory : globalSelectedServer
+  const selectedServer = serverForDirectory || globalSelectedServer
   
   const getDirectoryApiUrl = useCallback((path: string) => {
     if (selectedServer) {
