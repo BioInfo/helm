@@ -785,7 +785,7 @@ return (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="hidden md:block p-2 rounded-lg bg-muted hover:bg-muted-foreground/20 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-95 hover:scale-105 shadow-md border border-border"
+            className="p-2 rounded-lg bg-muted hover:bg-muted-foreground/20 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-95 hover:scale-105 shadow-md border border-border"
             title="Upload image or PDF"
           >
             <Upload className="w-5 h-5" />
