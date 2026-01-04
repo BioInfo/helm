@@ -302,24 +302,42 @@ app.get('/:id/files/*', async (c) => {
   const filePath = decodeURIComponent(pathParam) || '/'
   
   try {
-    const response = await proxyToServer(server, `/file?path=${encodeURIComponent(filePath)}`)
+    const listResponse = await proxyToServer(server, `/file?path=${encodeURIComponent(filePath)}`)
     
-    if (!response.ok) {
-      logger.warn(`Failed to get file from server ${server.id}: ${response.status}`)
+    if (!listResponse.ok) {
+      logger.warn(`Failed to get file from server ${server.id}: ${listResponse.status}`)
       return c.json({ 
         error: 'Failed to fetch file from server',
-        status: response.status 
-      }, response.status as ContentfulStatusCode)
+        status: listResponse.status 
+      }, listResponse.status as ContentfulStatusCode)
     }
     
-    const data = await response.json() as OpenCodeFile | OpenCodeFile[]
+    const data = await listResponse.json() as OpenCodeFile[]
     
-    if (Array.isArray(data)) {
+    if (Array.isArray(data) && data.length > 0) {
       const transformedFiles = transformOpenCodeFilesToHelmFormat(data, filePath, server.workdir)
       return c.json(transformedFiles)
     }
     
-    return c.json(transformOpenCodeFileToHelmFormat(data, filePath))
+    if (Array.isArray(data) && data.length === 0) {
+      const contentResponse = await proxyToServer(server, `/file/content?path=${encodeURIComponent(filePath)}`)
+      
+      if (contentResponse.ok) {
+        const contentData = await contentResponse.json() as { type: string; content: string }
+        const fileName = filePath.split('/').pop() || filePath
+        return c.json({
+          name: fileName,
+          path: filePath,
+          isDirectory: false,
+          size: contentData.content?.length || 0,
+          content: contentData.content ? Buffer.from(contentData.content).toString('base64') : undefined,
+          mimeType: 'text/plain',
+          lastModified: new Date(),
+        })
+      }
+    }
+    
+    return c.json({ error: 'File not found' }, 404)
   } catch (error) {
     logger.error(`Error fetching file from server ${server.id}:`, error)
     return c.json({ error: 'Failed to connect to server' }, 502)

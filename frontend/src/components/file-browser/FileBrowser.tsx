@@ -164,6 +164,10 @@ export function FileBrowser({ basePath = '', onFileSelect, embedded = false, ini
   
   const getFileContentUrl = useCallback((relativePath: string) => {
     if (selectedServer) {
+      if (selectedServer.isRemote) {
+        const cleanPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`
+        return `${API_BASE_URL}/api/servers/${selectedServer.id}/files${cleanPath}`
+      }
       const workdir = selectedServer.workdir.replace(/\/$/, '')
       if (relativePath.startsWith(workdir + '/') || relativePath === workdir) {
         return `${API_BASE_URL}/api/files/${relativePath}`
