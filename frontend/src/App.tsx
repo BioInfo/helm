@@ -8,6 +8,7 @@ import { SessionDetail } from './pages/SessionDetail'
 import { SettingsDialog } from './components/settings/SettingsDialog'
 import { useSettingsDialog } from './hooks/useSettingsDialog'
 import { useTheme } from './hooks/useTheme'
+import { useServerDiscovery } from './hooks/useServerDiscovery'
 import { TTSProvider } from './contexts/TTSContext'
 import { PermissionProvider } from '@/contexts/PermissionContext'
 import { PermissionRequestDialog } from './components/session/PermissionRequestDialog'
@@ -27,6 +28,7 @@ const queryClient = new QueryClient({
 function AppContent() {
   const { isOpen, close, openToTab } = useSettingsDialog()
   useTheme()
+  useServerDiscovery()
 
   useEffect(() => {
     const handleOpenHelp = () => openToTab('help')
