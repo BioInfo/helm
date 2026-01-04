@@ -232,9 +232,44 @@ export async function renameOrMoveFile(userPath: string, body: { newPath: string
   }
 }
 
+// Directories that are never allowed for security
+const BLOCKED_PATHS = [
+  '/etc',
+  '/var',
+  '/System',
+  '/Library',
+  '/private',
+  '/bin',
+  '/sbin',
+  '/usr',
+  '/opt',
+  '/root',
+]
+
 function validatePath(userPath: string): string {
   const trimmed = userPath.trim()
   const normalized = path.normalize(trimmed).replace(/^(\.\.(\/|\\|$))+/, '')
+  
+  // Handle absolute paths (for discovered servers)
+  if (trimmed.startsWith('/')) {
+    const resolved = path.resolve(normalized)
+    
+    // Block access to sensitive system directories
+    for (const blocked of BLOCKED_PATHS) {
+      if (resolved.startsWith(blocked + '/') || resolved === blocked) {
+        throw { message: 'Access to system directories is not allowed', statusCode: 403 }
+      }
+    }
+    
+    // Path traversal check - ensure resolved path doesn't escape via ..
+    if (resolved.includes('/../') || resolved.endsWith('/..')) {
+      throw { message: 'Path traversal detected', statusCode: 403 }
+    }
+    
+    return resolved
+  }
+  
+  // Handle relative paths (for workspace)
   const fullPath = path.join(SHARED_WORKSPACE_BASE, normalized)
   const resolved = path.resolve(fullPath)
   
