@@ -136,7 +136,16 @@ export function FileBrowser({ basePath = '', onFileSelect, embedded = false, ini
   const globalSelectedServer = useSelectedServer()
   const selectedServer = serverForDirectory || globalSelectedServer
   
-  const isReadOnly = readOnlyProp ?? !!selectedServer
+  const isReadOnly = readOnlyProp ?? false
+  
+  const getAbsoluteFilePath = useCallback((relativePath: string) => {
+    if (selectedServer) {
+      const workdir = selectedServer.workdir.replace(/\/$/, '')
+      const cleanPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`
+      return `${workdir}${cleanPath}`
+    }
+    return relativePath
+  }, [selectedServer])
   
   const getDirectoryApiUrl = useCallback((path: string) => {
     if (selectedServer) {
@@ -240,8 +249,10 @@ useEffect(() => {
     formData.append('file', item.file)
     formData.append('relativePath', item.relativePath)
     
+    const uploadPath = getAbsoluteFilePath(currentPath)
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/api/files/${currentPath}`, {
+      const response = await fetch(`${API_BASE_URL}/api/files${uploadPath}`, {
         method: 'POST',
         body: formData,
       })
@@ -255,7 +266,7 @@ useEffect(() => {
     } catch (err) {
       return err instanceof Error ? err.message : 'Upload failed'
     }
-  }, [currentPath])
+  }, [currentPath, getAbsoluteFilePath])
 
   const handleUploadItems = useCallback(async (items: UploadItem[]) => {
     if (items.length === 0) return
@@ -311,7 +322,8 @@ useEffect(() => {
 
   const handleCreateFile = useCallback(async (name: string, type: 'file' | 'folder') => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/files/${currentPath}/${name}`, {
+      const createPath = getAbsoluteFilePath(currentPath ? `${currentPath}/${name}` : name)
+      const response = await fetch(`${API_BASE_URL}/api/files${createPath}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type, content: type === 'file' ? '' : undefined }),
@@ -325,11 +337,12 @@ useEffect(() => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Create failed')
     }
-  }, [currentPath, loadFiles])
+  }, [currentPath, loadFiles, getAbsoluteFilePath])
 
   const handleDelete = useCallback(async (path: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/files/${path}`, {
+      const deletePath = getAbsoluteFilePath(path)
+      const response = await fetch(`${API_BASE_URL}/api/files${deletePath}`, {
         method: 'DELETE',
       })
       
@@ -342,14 +355,16 @@ useEffect(() => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Delete failed')
     }
-  }, [currentPath, loadFiles])
+  }, [currentPath, loadFiles, getAbsoluteFilePath])
 
   const handleRename = useCallback(async (oldPath: string, newPath: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/files/${oldPath}`, {
+      const absoluteOldPath = getAbsoluteFilePath(oldPath)
+      const absoluteNewPath = getAbsoluteFilePath(newPath)
+      const response = await fetch(`${API_BASE_URL}/api/files${absoluteOldPath}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPath }),
+        body: JSON.stringify({ newPath: absoluteNewPath }),
       })
       
       if (!response.ok) {
@@ -360,7 +375,7 @@ useEffect(() => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Rename failed')
     }
-  }, [currentPath, loadFiles])
+  }, [currentPath, loadFiles, getAbsoluteFilePath])
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault()
@@ -393,8 +408,11 @@ useEffect(() => {
   }
 
   useEffect(() => {
+    if (basePath && basePath !== '.') {
+      if (!selectedServer) return
+    }
     loadFiles(basePath)
-  }, [basePath, loadFiles])
+  }, [basePath, loadFiles, selectedServer])
 
   useEffect(() => {
     const handleFileSaved = (event: CustomEvent<{ path: string; content: string }>) => {
