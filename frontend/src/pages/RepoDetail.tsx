@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRepo } from "@/api/repos";
@@ -8,11 +8,11 @@ import { RepoDetailHeader } from "@/components/layout/RepoDetailHeader";
 import { SwitchConfigDialog } from "@/components/repo/SwitchConfigDialog";
 import { RepoMcpDialog } from "@/components/repo/RepoMcpDialog";
 import { useCreateSession } from "@/hooks/useOpenCode";
-import { API_BASE_URL } from "@/config";
+import { API_BASE_URL, OPENCODE_API_ENDPOINT } from "@/config";
 import { useServerUrlForDirectory } from "@/stores/serverStore";
 import { useSwipeBack } from "@/hooks/useMobile";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Terminal } from "lucide-react";
 
 export function RepoDetail() {
   const { id } = useParams<{ id: string }>();
@@ -52,7 +52,13 @@ export function RepoDetail() {
   });
 
   const repoDirectory = repo?.fullPath;
-  const opcodeUrl = useServerUrlForDirectory(repoDirectory);
+  const discoveredServerUrl = useServerUrlForDirectory(repoDirectory);
+  
+  const opcodeUrl = useMemo(() => {
+    if (discoveredServerUrl) return discoveredServerUrl;
+    if (repo && !repo.isLocal) return OPENCODE_API_ENDPOINT;
+    return null;
+  }, [discoveredServerUrl, repo]);
 
   const createSessionMutation = useCreateSession(opcodeUrl, repoDirectory);
 
@@ -127,13 +133,27 @@ export function RepoDetail() {
       />
 
       <div className="flex-1 flex flex-col min-h-0">
-        {opcodeUrl && repoDirectory && (
+        {opcodeUrl && repoDirectory ? (
           <SessionList
             opcodeUrl={opcodeUrl}
             directory={repoDirectory}
             onSelectSession={handleSelectSession}
           />
-        )}
+        ) : repo?.isLocal ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <Terminal className="w-12 h-12 text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">OpenCode Not Running</h3>
+            <p className="text-sm text-muted-foreground max-w-md mb-4">
+              Start OpenCode in this project directory to view and create sessions:
+            </p>
+            <code className="px-4 py-2 bg-muted rounded-lg text-sm font-mono text-foreground">
+              cd {repoDirectory} && opencode
+            </code>
+            <p className="text-xs text-muted-foreground/70 mt-4">
+              Helm will automatically detect the running instance
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <FileBrowserSheet
