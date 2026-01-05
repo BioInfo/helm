@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { Header } from "@/components/ui/header"
@@ -27,6 +27,14 @@ import { TerminalIndicator } from "@/components/terminal"
 import { TokenCounter } from "@/components/observability"
 import { cn } from "@/lib/utils"
 
+interface RawSession {
+  id: string
+  title?: string
+  directory?: string
+  createdAt?: number
+  updatedAt?: number
+}
+
 interface SessionInfo {
   id: string
   title: string
@@ -46,8 +54,8 @@ async function fetchSessionsFromServer(server: OpenCodeServer): Promise<SessionI
     const response = await fetch(url, { signal: AbortSignal.timeout(3000) })
     if (!response.ok) return []
     
-    const sessions = await response.json()
-    return sessions.map((s: any) => ({
+    const sessions: RawSession[] = await response.json()
+    return sessions.map((s) => ({
       id: s.id,
       title: s.title || 'Untitled Session',
       directory: s.directory || server.workdir,
@@ -60,10 +68,13 @@ async function fetchSessionsFromServer(server: OpenCodeServer): Promise<SessionI
   }
 }
 
+const SESSIONS_PER_PAGE = 12
+
 export function Home() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedServerId, setSelectedServerId] = useState<string | null>(null)
+  const [visibleCount, setVisibleCount] = useState(SESSIONS_PER_PAGE)
   const servers = useServerStore((state) => state.servers)
   const refreshServers = useServerStore((state) => state.refresh)
   
@@ -72,15 +83,25 @@ export function Home() {
     [servers]
   )
 
+  const serversDeduplicatedByWorkdir = useMemo(() => {
+    const byWorkdir = new Map<string, OpenCodeServer>()
+    for (const server of healthyServers) {
+      if (!byWorkdir.has(server.workdir)) {
+        byWorkdir.set(server.workdir, server)
+      }
+    }
+    return Array.from(byWorkdir.values())
+  }, [healthyServers])
+
   const { data: allSessions = [], isLoading, refetch } = useQuery({
-    queryKey: ['all-sessions', healthyServers.map(s => s.id).join(',')],
+    queryKey: ['all-sessions', serversDeduplicatedByWorkdir.map(s => s.id).join(',')],
     queryFn: async () => {
       const results = await Promise.all(
-        healthyServers.map(server => fetchSessionsFromServer(server))
+        serversDeduplicatedByWorkdir.map(server => fetchSessionsFromServer(server))
       )
       return results.flat().sort((a, b) => b.updatedAt - a.updatedAt)
     },
-    enabled: healthyServers.length > 0,
+    enabled: serversDeduplicatedByWorkdir.length > 0,
     refetchInterval: 30000,
   })
 
@@ -102,6 +123,21 @@ export function Home() {
     
     return sessions
   }, [allSessions, selectedServerId, searchQuery])
+
+  const visibleSessions = useMemo(() => 
+    filteredSessions.slice(0, visibleCount),
+    [filteredSessions, visibleCount]
+  )
+
+  const hasMoreSessions = filteredSessions.length > visibleCount
+
+  const handleShowMore = () => {
+    setVisibleCount(prev => prev + SESSIONS_PER_PAGE)
+  }
+
+  useEffect(() => {
+    setVisibleCount(SESSIONS_PER_PAGE)
+  }, [searchQuery, selectedServerId])
 
   const handleSessionClick = async (session: SessionInfo) => {
     try {
@@ -281,7 +317,7 @@ export function Home() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredSessions.map(session => (
+                {visibleSessions.map(session => (
                   <Card
                     key={`${session.server.id}-${session.id}`}
                     className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:bg-accent/5 cursor-pointer border-muted-foreground/10"
@@ -323,6 +359,22 @@ export function Home() {
                     </div>
                   </Card>
                 ))}
+              </div>
+            )}
+
+            {hasMoreSessions && (
+              <div className="flex justify-center pt-2">
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={handleShowMore}
+                  className="gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  Show More
+                  <Badge variant="secondary" className="ml-1">
+                    {filteredSessions.length - visibleCount} remaining
+                  </Badge>
+                </Button>
               </div>
             )}
           </div>
