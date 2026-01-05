@@ -458,7 +458,7 @@ export function ModelSelectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-[95vw] h-[90vh] max-h-[90vh] bg-background border-border text-foreground p-0 flex flex-col gap-0">
+      <DialogContent mobileFullscreen className="sm:w-[95vw] sm:max-w-7xl sm:h-[90vh] sm:max-h-[90vh] bg-background border-border text-foreground flex flex-col gap-0">
         <DialogHeader className="p-4 sm:p-6 pb-2 border-b border-border flex-shrink-0">
           <DialogTitle className="text-lg sm:text-xl font-semibold">
             {selectedProvider && selectedProviderData ? `Select Model - ${selectedProviderData.name}` : 'Select Model'}

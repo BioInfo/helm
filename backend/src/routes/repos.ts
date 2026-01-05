@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import type { Db } from '../db/schema'
 import * as db from '../db/queries'
 import * as repoService from '../services/repo'
@@ -9,6 +10,7 @@ import { SettingsService } from '../services/settings'
 import { writeFileContent } from '../services/file-operations'
 import { opencodeServerManager } from '../services/opencode-single-server'
 import { logger } from '../utils/logger'
+import { getErrorMessage, getStatusCode } from '../utils/error-utils'
 import { getOpenCodeConfigFilePath, getReposPath } from '@helm/shared/config/env'
 import path from 'path'
 
@@ -56,9 +58,9 @@ export function createRepoRoutes(database: Db) {
       }
       
       return c.json(repo)
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create repo:', error)
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, getStatusCode(error) as ContentfulStatusCode)
     }
   })
   
@@ -72,9 +74,9 @@ export function createRepoRoutes(database: Db) {
         })
       )
       return c.json(reposWithCurrentBranch)
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to list repos:', error)
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
   
@@ -90,9 +92,9 @@ export function createRepoRoutes(database: Db) {
       const currentBranch = await repoService.getCurrentBranch(repo)
       
       return c.json({ ...repo, currentBranch })
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get repo:', error)
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
   
@@ -108,9 +110,9 @@ export function createRepoRoutes(database: Db) {
       await repoService.deleteRepoFiles(database, id)
       
       return c.json({ success: true })
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to delete repo:', error)
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
   
@@ -121,9 +123,9 @@ export function createRepoRoutes(database: Db) {
       
       const repo = db.getRepoById(database, id)
       return c.json(repo)
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to pull repo:', error)
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
 
@@ -165,9 +167,9 @@ export function createRepoRoutes(database: Db) {
       
       const updatedRepo = db.getRepoById(database, id)
       return c.json(updatedRepo)
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to switch repo config:', error)
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
 
@@ -193,12 +195,12 @@ export function createRepoRoutes(database: Db) {
       const currentBranch = await repoService.getCurrentBranch(updatedRepo!)
       
       return c.json({ ...updatedRepo, currentBranch })
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to switch branch:', error)
       if (error instanceof GitAuthenticationError) {
         return c.json({ error: error.message, code: 'AUTH_FAILED' }, 401)
       }
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
 
@@ -224,12 +226,12 @@ export function createRepoRoutes(database: Db) {
       const currentBranch = await repoService.getCurrentBranch(updatedRepo!)
       
       return c.json({ ...updatedRepo, currentBranch })
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create branch:', error)
       if (error instanceof GitAuthenticationError) {
         return c.json({ error: error.message, code: 'AUTH_FAILED' }, 401)
       }
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
 
@@ -246,9 +248,9 @@ export function createRepoRoutes(database: Db) {
 
       
       return c.json(branches)
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to list branches:', error)
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
 
@@ -266,9 +268,9 @@ export function createRepoRoutes(database: Db) {
 
       
       return c.json(status)
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get git status:', error)
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
 
@@ -292,9 +294,9 @@ export function createRepoRoutes(database: Db) {
 
       
       return c.json(diff)
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get file diff:', error)
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
 
@@ -330,9 +332,9 @@ export function createRepoRoutes(database: Db) {
           'Content-Length': archiveSize.toString(),
         }
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create repo archive:', error)
-      return c.json({ error: error.message }, 500)
+      return c.json({ error: getErrorMessage(error) }, 500)
     }
   })
   

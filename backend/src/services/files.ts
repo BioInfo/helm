@@ -14,7 +14,7 @@ import {
   listDirectory 
 } from './file-operations'
 import { getReposPath, FILE_LIMITS } from '@helm/shared/config/env'
-import { ALLOWED_MIME_TYPES } from '@helm/shared'
+import { ALLOWED_MIME_TYPES, type AllowedMimeType } from '@helm/shared'
 import type { ChunkedFileInfo, PatchOperation } from '@helm/shared'
 
 const SHARED_WORKSPACE_BASE = getReposPath()
@@ -65,17 +65,14 @@ export async function getFile(userPath: string): Promise<FileInfo> {
   logger.info(`Getting file for path: ${userPath} -> ${validatedPath}`)
   
   try {
-    // Check if path exists
     const exists = await fileExists(validatedPath)
     if (!exists) {
       throw new Error('Path does not exist')
     }
     
-    // Get file stats
     const stats = await getFileStats(validatedPath)
     
     if (stats.isDirectory) {
-      // It's a directory - list contents
       const entries = await listDirectory(validatedPath)
       const children: FileInfo[] = []
       
@@ -104,13 +101,12 @@ export async function getFile(userPath: string): Promise<FileInfo> {
         workspaceRoot: SHARED_WORKSPACE_BASE,
       }
     } else {
-      // It's a file - get content
       let content = ''
-      let mimeType = getMimeType(validatedPath, new Uint8Array())
+      const mimeType = getMimeType(validatedPath)
       
       if (stats.size < FILE_LIMITS.MAX_SIZE_BYTES) {
         try {
-          const mimeType = getMimeType(validatedPath, new Uint8Array())
+          const mimeType = getMimeType(validatedPath)
           
           if (mimeType.startsWith('image/') || !mimeType.startsWith('text/')) {
             content = await readFileAsBase64(validatedPath)
@@ -144,8 +140,8 @@ export async function uploadFile(userPath: string, file: File, relativePath?: st
     throw new Error('File too large')
   }
   
-  const mimeType = file.type || getMimeType(file.name, new Uint8Array())
-  if (!ALLOWED_MIME_TYPES.includes(mimeType as any) && !mimeType.startsWith('text/')) {
+  const mimeType = (file.type || getMimeType(file.name)) as AllowedMimeType
+  if (!ALLOWED_MIME_TYPES.includes(mimeType) && !mimeType.startsWith('text/')) {
     throw new Error('File type not allowed')
   }
   
@@ -214,13 +210,10 @@ export async function renameOrMoveFile(userPath: string, body: { newPath: string
   const oldValidatedPath = validatePath(userPath)
   const newValidatedPath = validatePath(body.newPath)
   
-  // Create parent directory if needed
   await fs.mkdir(path.dirname(newValidatedPath), { recursive: true })
   
-  // Move/rename file
   await fs.rename(oldValidatedPath, newValidatedPath)
   
-  // Get stats of new file
   const stats = await getFileStats(newValidatedPath)
   
   return {
@@ -232,7 +225,6 @@ export async function renameOrMoveFile(userPath: string, body: { newPath: string
   }
 }
 
-// Directories that are never allowed for security
 const BLOCKED_PATHS = [
   '/etc',
   '/var',
@@ -250,18 +242,15 @@ function validatePath(userPath: string): string {
   const trimmed = userPath.trim()
   const normalized = path.normalize(trimmed).replace(/^(\.\.(\/|\\|$))+/, '')
   
-  // Handle absolute paths (for discovered servers)
   if (trimmed.startsWith('/')) {
     const resolved = path.resolve(normalized)
     
-    // Block access to sensitive system directories
     for (const blocked of BLOCKED_PATHS) {
       if (resolved.startsWith(blocked + '/') || resolved === blocked) {
         throw { message: 'Access to system directories is not allowed', statusCode: 403 }
       }
     }
     
-    // Path traversal check - ensure resolved path doesn't escape via ..
     if (resolved.includes('/../') || resolved.endsWith('/..')) {
       throw { message: 'Path traversal detected', statusCode: 403 }
     }
@@ -269,7 +258,6 @@ function validatePath(userPath: string): string {
     return resolved
   }
   
-  // Handle relative paths (for workspace)
   const fullPath = path.join(SHARED_WORKSPACE_BASE, normalized)
   const resolved = path.resolve(fullPath)
   
@@ -281,10 +269,10 @@ function validatePath(userPath: string): string {
   return resolved
 }
 
-function getMimeType(filePath: string, _content: Uint8Array): string {
+function getMimeType(filePath: string): AllowedMimeType {
   const ext = path.extname(filePath).toLowerCase()
   
-  const mimeTypes: Record<string, string> = {
+  const mimeTypes: Record<string, AllowedMimeType> = {
     '.txt': 'text/plain',
     '.html': 'text/html',
     '.css': 'text/css',
@@ -358,7 +346,7 @@ export async function getFileRange(userPath: string, startLine: number, endLine:
   const totalLines = await countFileLines(validatedPath)
   const clampedEnd = Math.min(endLine, totalLines)
   const lines = await readFileLines(validatedPath, startLine, clampedEnd)
-  const mimeType = getMimeType(validatedPath, new Uint8Array())
+  const mimeType = getMimeType(validatedPath)
   
   return {
     name: path.basename(validatedPath),

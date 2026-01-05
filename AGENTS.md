@@ -5,7 +5,7 @@
 ## Project Overview
 
 **Repository:** `github.com/BioInfo/helm`  
-**Base:** Fork of `github.com/chriswritescode-dev/opencode-web`  
+**Base:** Fork of `github.com/chriswritescode-dev/opencode-manager`  
 **Purpose:** Mobile-first interface for managing multiple OpenCode instances  
 **Primary Use Case:** Remote coding orchestration via Tailscale  
 
@@ -20,6 +20,18 @@ pnpm dev
 # Frontend: http://localhost:5173
 # Backend API: http://localhost:5001
 ```
+
+## Commands
+
+- `pnpm dev` - Start both backend (5001) and frontend (5173)
+- `pnpm dev:backend` - Backend only: `tsx watch backend/src/index.ts`
+- `pnpm dev:frontend` - Frontend only: `cd frontend && vite`
+- `pnpm build` - Build both backend and frontend
+- `pnpm test` - Run backend tests
+- `pnpm lint` - Lint both backend and frontend
+- `pnpm lint:backend` - Backend linting
+- `pnpm lint:frontend` - Frontend linting
+- `pnpm typecheck` - Typecheck both packages
 
 ## Architecture
 
@@ -56,7 +68,19 @@ helm/
 └── docs/               # Documentation
 ```
 
-## Key Features (Implemented)
+## Code Style
+
+- No comments, self-documenting code only
+- No console logs (use proper logger or error handling)
+- Strict TypeScript everywhere, proper typing required
+- Named imports only: `import { Hono } from 'hono'`, `import { useState } from 'react'`
+- DRY principles, follow existing patterns
+- Use shared types from workspace package (@helm/shared)
+- OpenCode server runs on port 5551, backend API on port 5001
+- Prefer pnpm over npm for all package management
+- Run `pnpm lint` after completing tasks to ensure code quality
+
+## Key Features
 
 | Feature | Location | Notes |
 |---------|----------|-------|
@@ -67,7 +91,6 @@ helm/
 | Session management | `frontend/src/components/session/` | List, rename, delete sessions |
 | File browser | `frontend/src/components/file-browser/` | Browse and edit files |
 | Git integration | `frontend/src/api/git.ts` | Status, diff, branches |
-| Offline support | `frontend/src/hooks/useOfflineSync.ts` | IndexedDB caching |
 
 ## Tech Stack
 
@@ -86,16 +109,6 @@ helm/
 - SQLite via better-sqlite3
 - node-pty for terminal
 
-## Code Style
-
-1. **TypeScript Strict** — No `any`, complete types
-2. **Functional Components** — Hooks only, no classes
-3. **Zustand for Global State** — Keep stores small and focused
-4. **React Query for Server State** — Caching, refetching
-5. **Tailwind for Styling** — Utility-first, dark mode via class
-6. **44px Touch Targets** — Minimum for interactive elements
-7. **Safe Area Handling** — Use `env(safe-area-inset-*)` for iOS
-
 ## API Endpoints
 
 ### Backend API (`/api/`)
@@ -113,66 +126,3 @@ helm/
 ### OpenCode Proxy (`/api/opencode/`)
 
 All requests to `/api/opencode/*` are proxied to the OpenCode server.
-
-## Environment Variables
-
-See `.env.example` for all options. Key variables:
-
-```bash
-PORT=5001              # Backend port
-HOST=0.0.0.0           # Bind address
-OPENCODE_SERVER_PORT=5551  # Internal OpenCode port
-WORKSPACE_PATH=./workspace # Data directory
-```
-
-## Development Commands
-
-```bash
-pnpm dev              # Start both frontend and backend
-pnpm dev:frontend     # Frontend only (port 5173)
-pnpm dev:backend      # Backend only (port 5001)
-pnpm build            # Production build
-pnpm test             # Run tests
-```
-
-## Testing Checklist
-
-Before submitting PRs:
-
-- [ ] Works on mobile Safari (iPhone)
-- [ ] Works on desktop Chrome
-- [ ] Dark mode renders correctly
-- [ ] Touch targets >= 44px
-- [ ] No TypeScript errors (`pnpm --filter frontend build`)
-- [ ] No console errors in browser
-- [ ] Terminal renders fonts correctly
-
-## Common Tasks
-
-### Adding a new API endpoint
-
-1. Create route in `backend/src/routes/`
-2. Register in `backend/src/index.ts`
-3. Add types in `shared/src/schemas/`
-4. Create React Query hook in `frontend/src/hooks/`
-
-### Adding a new UI component
-
-1. Create in `frontend/src/components/`
-2. Use existing shadcn/ui primitives from `frontend/src/components/ui/`
-3. Follow existing patterns for dark mode support
-4. Test on mobile viewport
-
-### Modifying OpenCode integration
-
-1. Check `frontend/src/api/opencode.ts` for client
-2. Types in `frontend/src/api/opencode-types.ts`
-3. Proxy logic in `backend/src/services/proxy.ts`
-
-## Resources
-
-- [OpenCode](https://opencode.ai) — The AI coding agent
-- [opencode-web](https://github.com/chriswritescode-dev/opencode-web) — Base project
-- [Xterm.js](https://xtermjs.org) — Terminal emulator
-- [Hono](https://hono.dev) — Web framework
-- [shadcn/ui](https://ui.shadcn.com) — UI components

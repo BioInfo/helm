@@ -1,10 +1,14 @@
-import { memo, useMemo, useState, useCallback } from 'react'
+import { memo, useMemo, useState, useCallback, useEffect } from 'react'
 import { MessagePart } from './MessagePart'
 import { MessageActionButtons } from './MessageActionButtons'
 import { UserMessageActionButtons } from './UserMessageActionButtons'
 import { EditableUserMessage, ClickableUserMessage } from './EditableUserMessage'
+import { SessionTodoDisplay } from './SessionTodoDisplay'
 import type { MessageWithParts } from '@/api/types'
 import { useSessionStatusForSession } from '@/stores/sessionStatusStore'
+import { useSessionTodos } from '@/stores/sessionTodosStore'
+import type { components } from '@/api/opencode-types'
+import type { Todo } from '@/components/message/SessionTodoDisplay'
 
 function getMessageTextContent(msg: MessageWithParts): string {
   return msg.parts
@@ -80,6 +84,46 @@ export const MessageThread = memo(function MessageThread({
   }, [messages])
 
   const isSessionBusy = !!pendingAssistantId || isSessionInRetry(sessionStatus)
+  const setSessionTodos = useSessionTodos((state) => state.setTodos)
+
+  useEffect(() => {
+    if (!messages || messages.length === 0) return
+
+    const latestTodoPart = messages
+      .flatMap(msg => msg.parts)
+      .filter((part): part is components['schemas']['ToolPart'] => part.type === 'tool' && (part.tool === 'todowrite' || part.tool === 'todoread'))
+      .filter(part => part.state.status === 'completed' && 'time' in part.state)
+      .sort((a, b) => {
+        const aState = a.state as { time?: { end?: number } }
+        const bState = b.state as { time?: { end?: number } }
+        const aEndTime = aState.time?.end ?? 0
+        const bEndTime = bState.time?.end ?? 0
+        return bEndTime - aEndTime
+      })[0]
+
+if (latestTodoPart) {
+const state = latestTodoPart.state
+      let todos: Todo[] = []
+
+      if ('metadata' in state && state.metadata?.todos && Array.isArray(state.metadata.todos)) {
+        todos = state.metadata.todos as Todo[]
+      } else if ('output' in state && state.output) {
+        try {
+          const parsed = JSON.parse(state.output)
+          todos = Array.isArray(parsed)
+            ? parsed as Todo[]
+            : parsed?.todos ? parsed.todos as Todo[]
+            : []
+        } catch (_) {
+          console.warn('Failed to parse todo output:', _)
+        }
+      }
+
+      if (todos.length > 0) {
+        setSessionTodos(sessionID, todos)
+      }
+    }
+  }, [messages, sessionID, setSessionTodos])
 
   const handleStartEditUserMessage = useCallback((userMessageId: string, assistantMessageId: string) => {
     setEditingUserMessageId(userMessageId)
@@ -106,19 +150,22 @@ export const MessageThread = memo(function MessageThread({
         const isQueued = msg.info.role === 'user' && pendingAssistantId && msg.info.id > pendingAssistantId
         const isLastUserMessage = msg.info.role === 'user' && msg.info.id === lastUserMessageId
         const messageTextContent = getMessageTextContent(msg)
-        
+
         const nextAssistantMessage = messages.slice(index + 1).find(m => m.info.role === 'assistant')
         const isUserBeforeAssistant = msg.info.role === 'user' && nextAssistantMessage
         const canEditUserMessage = isUserBeforeAssistant && nextAssistantMessage?.info.id === lastAssistantId && !isSessionBusy
         const canUndoUserMessage = isLastUserMessage && nextAssistantMessage && !isSessionBusy && onUndoMessage
 
         const isEditingThisMessage = editingUserMessageId === msg.info.id
-        
+
         return (
           <div
             key={msg.info.id}
             className="flex flex-col group"
           >
+            {msg.info.role === 'assistant' && streaming && (
+              <SessionTodoDisplay sessionID={sessionID} />
+            )}
             <div
               className={`w-full rounded-lg p-1.5 ${
                 msg.info.role === 'user'

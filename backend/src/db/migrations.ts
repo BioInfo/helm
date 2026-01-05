@@ -1,11 +1,20 @@
 import { type Db } from './schema'
 import { logger } from '../utils/logger'
 
+interface ColumnInfo {
+  cid: number
+  name: string
+  type: string
+  notnull: number
+  dflt_value: unknown
+  pk: number
+}
+
 export function runMigrations(db: Db): void {
   try {
-    const tableInfo = db.prepare("PRAGMA table_info(repos)").all() as any[]
+    const tableInfo = db.prepare("PRAGMA table_info(repos)").all() as ColumnInfo[]
     
-    const repoUrlColumn = tableInfo.find((col: any) => col.name === 'repo_url')
+    const repoUrlColumn = tableInfo.find((col: ColumnInfo) => col.name === 'repo_url')
     if (repoUrlColumn && repoUrlColumn.notnull === 1) {
       logger.info('Migrating repos table to allow nullable repo_url for local repos')
       db.exec('BEGIN TRANSACTION')
@@ -26,7 +35,7 @@ export function runMigrations(db: Db): void {
           )
         `)
         
-        const existingColumns = tableInfo.map((col: any) => col.name)
+        const existingColumns = tableInfo.map((col: ColumnInfo) => col.name)
         const columnsToCopy = ['id', 'repo_url', 'local_path', 'branch', 'default_branch', 'clone_status', 'cloned_at', 'last_pulled', 'opencode_config_name', 'is_worktree', 'is_local']
           .filter(col => existingColumns.includes(col))
         
@@ -107,7 +116,10 @@ export function runMigrations(db: Db): void {
     }
     
     try {
-      const repos = db.prepare("SELECT id, local_path FROM repos WHERE local_path LIKE 'repos/%'").all() as any[]
+      const repos = db.prepare("SELECT id, local_path FROM repos WHERE local_path LIKE 'repos/%'").all() as Array<{
+        id: number
+        local_path: string
+      }>
       if (repos.length > 0) {
         logger.info(`Migrating ${repos.length} repos to remove 'repos/' prefix from local_path`)
         const updateStmt = db.prepare("UPDATE repos SET local_path = ? WHERE id = ?")
@@ -121,7 +133,6 @@ export function runMigrations(db: Db): void {
       logger.error('Failed to migrate local_path format:', error)
     }
     
-    // Migration: Add remote_servers table for multi-machine discovery
     try {
       const remoteServersTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='remote_servers'").get()
       if (!remoteServersTable) {
@@ -155,7 +166,7 @@ export function runMigrations(db: Db): void {
   }
 }
 
-function migrateGitTokenToCredentials(db: Database): void {
+function migrateGitTokenToCredentials(db: Db): void {
   try {
     const rows = db.prepare('SELECT user_id, preferences FROM user_preferences').all() as Array<{
       user_id: string

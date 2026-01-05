@@ -190,10 +190,9 @@ class OpenCodeServerManager {
     await new Promise(r => setTimeout(r, 2000))
     
     try {
-      process.kill(this.serverPid, 0)
       process.kill(this.serverPid, 'SIGKILL')
-    } catch {
-      
+    } catch (error) {
+      logger.warn(`Failed to send SIGKILL to ${this.serverPid}:`, error)
     }
     
     this.serverPid = null

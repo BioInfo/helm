@@ -1,8 +1,10 @@
 import { executeCommand } from '../utils/process'
 import { logger } from '../utils/logger'
+import { getErrorMessage } from '../utils/error-utils'
 import { SettingsService } from './settings'
 import type { Db } from '../db/schema'
 import path from 'path'
+import fs from 'fs/promises'
 import { createGitEnv, createNoPromptGitEnv } from '../utils/git-auth'
 
 async function hasCommits(repoPath: string): Promise<boolean> {
@@ -139,6 +141,37 @@ function parsePorcelainV2(output: string): { branch: string; ahead: number; behi
   return { branch, ahead, behind, files }
 }
 
+async function expandUntrackedDirectory(repoPath: string, dirPath: string): Promise<GitFileStatus[]> {
+  const cleanDirPath = dirPath.endsWith('/') ? dirPath.slice(0, -1) : dirPath
+  const fullDirPath = path.join(repoPath, cleanDirPath)
+  const files: GitFileStatus[] = []
+  
+  async function walkDir(currentPath: string, relativePath: string): Promise<void> {
+    try {
+      const entries = await fs.readdir(currentPath, { withFileTypes: true })
+      for (const entry of entries) {
+        const entryRelPath = relativePath ? `${relativePath}/${entry.name}` : entry.name
+        const entryFullPath = path.join(currentPath, entry.name)
+        
+        if (entry.isDirectory()) {
+          await walkDir(entryFullPath, entryRelPath)
+        } else {
+          files.push({
+            path: `${cleanDirPath}/${entryRelPath}`,
+            status: 'untracked',
+            staged: false
+          })
+        }
+      }
+    } catch {
+      // Ignore errors reading directory
+    }
+  }
+  
+  await walkDir(fullDirPath, '')
+  return files
+}
+
 export async function getGitStatus(repoPath: string, database?: Db): Promise<GitStatusResponse> {
   try {
     const fullPath = path.resolve(repoPath)
@@ -146,16 +179,30 @@ export async function getGitStatus(repoPath: string, database?: Db): Promise<Git
     const output = await executeCommand(['git', '-C', fullPath, 'status', '--porcelain=v2', '--branch'], { env })
     const { branch, ahead, behind, files } = parsePorcelainV2(output)
 
+    const expandedFiles: GitFileStatus[] = []
+    for (const file of files) {
+      if (file.status === 'untracked' && file.path.endsWith('/')) {
+        const dirFiles = await expandUntrackedDirectory(fullPath, file.path)
+        if (dirFiles.length > 0) {
+          expandedFiles.push(...dirFiles)
+        } else {
+          expandedFiles.push(file)
+        }
+      } else {
+        expandedFiles.push(file)
+      }
+    }
+
     return {
       branch,
       ahead,
       behind,
-      files,
-      hasChanges: files.length > 0
+      files: expandedFiles,
+      hasChanges: expandedFiles.length > 0
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Failed to get git status for ${repoPath}:`, error)
-    throw new Error(`Failed to get git status: ${error.message}`)
+    throw new Error(`Failed to get git status: ${getErrorMessage(error)}`)
   }
 }
 
@@ -185,13 +232,14 @@ export async function getFileDiff(repoPath: string, filePath: string, database?:
     
     if (fileStatus.status === 'untracked') {
       try {
-        const content = await executeCommand(['git', '-C', fullRepoPath, 'diff', '--no-index', '--', '/dev/null', filePath], { env })
+        const content = await executeCommand(['git', '-C', fullRepoPath, 'diff', '--no-index', '--', '/dev/null', filePath], { env, silent: true })
         diff = content
-      } catch (error: any) {
-        if (error.message?.includes('exit code 1') || error.message?.includes('Command failed with code 1')) {
-          const output = error.message || ''
-          const diffMatch = output.match(/diff --git[\s\S]*/)
-          diff = diffMatch ? diffMatch[0] : `New file: ${filePath}`
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error)
+        if (errorMessage?.includes('exit code 1') || errorMessage?.includes('Command failed with code 1')) {
+          const output = errorMessage || ''
+          const diffMatch = output.match(/diff --git[\s\S]*(?=\n\n No newline|$)/)
+          diff = diffMatch ? diffMatch[0] : output.substring(output.indexOf('diff --git'))
         } else {
           diff = `New file: ${filePath}`
         }
@@ -204,8 +252,8 @@ export async function getFileDiff(repoPath: string, filePath: string, database?:
         } else {
           diff = `New file (no commits yet): ${filePath}`
         }
-      } catch (error: any) {
-        logger.warn(`Failed to get diff for ${filePath}:`, error.message)
+      } catch (error: unknown) {
+        logger.warn(`Failed to get diff for ${filePath}:`, getErrorMessage(error))
         diff = null
       }
     }
@@ -233,8 +281,8 @@ export async function getFileDiff(repoPath: string, filePath: string, database?:
       deletions,
       isBinary
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Failed to get file diff for ${filePath}:`, error)
-    throw new Error(`Failed to get file diff: ${error.message}`)
+    throw new Error(`Failed to get file diff: ${getErrorMessage(error)}`)
   }
 }

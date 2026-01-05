@@ -9,6 +9,7 @@ import { settingsApi } from '@/api/settings'
 import { useSessionStatus } from '@/stores/sessionStatusStore'
 import { useMCPStore } from '@/stores/mcpStore'
 import { useObservabilityStore } from '@/stores/observabilityStore'
+import { useSessionTodos } from '@/stores/sessionTodosStore'
 
 const MAX_RECONNECT_DELAY = 30000
 const INITIAL_RECONNECT_DELAY = 1000
@@ -57,6 +58,7 @@ export const useSSE = (opcodeUrl: string | null | undefined, directory?: string)
   const setSessionStatus = useSessionStatus((state) => state.setStatus)
   const addOrUpdateToolCall = useMCPStore((state) => state.addOrUpdateToolCall)
   const updateSessionUsage = useObservabilityStore((state) => state.updateSessionUsage)
+  const setSessionTodos = useSessionTodos((state) => state.setTodos)
   const countedMessagesRef = useRef<Set<string>>(new Set())
 
   const scheduleReconnect = useCallback((connectFn: () => void) => {
@@ -355,9 +357,11 @@ export const useSSE = (opcodeUrl: string | null | undefined, directory?: string)
           break
 
         case 'todo.updated':
-          if ('sessionID' in event.properties) {
+          if ('sessionID' in event.properties && 'todos' in event.properties) {
+            const { sessionID, todos } = event.properties
+            setSessionTodos(sessionID, todos)
             queryClient.invalidateQueries({ 
-              queryKey: ['opencode', 'todos', opcodeUrl, event.properties.sessionID, directory] 
+              queryKey: ['opencode', 'todos', opcodeUrl, sessionID, directory] 
             })
           }
           break
@@ -480,7 +484,7 @@ export const useSSE = (opcodeUrl: string | null | undefined, directory?: string)
       }
       countedMessages.clear()
     }
-  }, [client, queryClient, opcodeUrl, directory, scheduleReconnect, resetReconnectDelay, setSessionStatus, addOrUpdateToolCall, updateSessionUsage])
+  }, [client, queryClient, opcodeUrl, directory, scheduleReconnect, resetReconnectDelay, setSessionStatus, addOrUpdateToolCall, updateSessionUsage, setSessionTodos])
 
   return { isConnected, error, isReconnecting }
 }

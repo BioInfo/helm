@@ -440,16 +440,16 @@ useEffect(() => {
   }, [selectedFile, handleFileSelect])
 
   useEffect(() => {
+    if (!isPreviewModalOpen) return
+
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isPreviewModalOpen) {
+      if (e.key === 'Escape') {
         handleCloseModal()
       }
     }
 
-    if (isPreviewModalOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
-    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
   }, [isPreviewModalOpen, handleCloseModal])
 
   const filteredFiles = files?.children?.filter(file =>
