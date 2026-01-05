@@ -5,6 +5,10 @@ import { FileBrowserSheet } from "@/components/file-browser/FileBrowserSheet";
 import { Header } from "@/components/ui/header";
 import { Button } from "@/components/ui/button";
 import { Plus, FolderOpen } from "lucide-react";
+import { ServerIndicator } from "@/components/servers";
+import { ToolsIndicator } from "@/components/mcp";
+import { TerminalIndicator } from "@/components/terminal";
+import { TokenCounter } from "@/components/observability";
 
 export function Repos() {
   const [addRepoOpen, setAddRepoOpen] = useState(false);
@@ -21,6 +25,10 @@ export function Repos() {
           <Header.Title logo>OpenCode</Header.Title>
         </div>
         <Header.Actions>
+          <TokenCounter />
+          <ToolsIndicator />
+          <TerminalIndicator />
+          <ServerIndicator />
           <Button
             variant="ghost"
             size="icon"

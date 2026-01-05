@@ -18,6 +18,10 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Plug, FolderOpen, Plus, GitBranch } from "lucide-react";
 
 import { Loader2, Terminal } from "lucide-react";
+import { ServerIndicator } from "@/components/servers";
+import { ToolsIndicator } from "@/components/mcp";
+import { TerminalIndicator } from "@/components/terminal";
+import { TokenCounter } from "@/components/observability";
 
 export function RepoDetail() {
   const { id } = useParams<{ id: string }>();
@@ -146,6 +150,10 @@ export function RepoDetail() {
         ) : null}
       </div>
       <Header.Actions>
+        <TokenCounter />
+        <ToolsIndicator />
+        <TerminalIndicator />
+        <ServerIndicator />
         <Button
           variant="outline"
           onClick={() => setMcpDialogOpen(true)}

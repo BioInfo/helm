@@ -33,6 +33,10 @@ import { showToast } from "@/lib/toast";
 import { RepoMcpDialog } from "@/components/repo/RepoMcpDialog";
 import { createOpenCodeClient } from "@/api/opencode";
 import { useSessionStatus } from "@/stores/sessionStatusStore";
+import { ServerIndicator } from "@/components/servers";
+import { ToolsIndicator } from "@/components/mcp";
+import { TerminalIndicator } from "@/components/terminal";
+import { TokenCounter } from "@/components/observability";
 
 export function SessionDetail() {
   const { id, sessionId } = useParams<{ id: string; sessionId: string }>();
@@ -332,6 +336,10 @@ export function SessionDetail() {
           />
         </div>
         <Header.Actions className="gap-2 sm:gap-4">
+          <TokenCounter />
+          <ToolsIndicator />
+          <TerminalIndicator />
+          <ServerIndicator />
           <ContextUsageIndicator
             opcodeUrl={opcodeUrl}
             sessionID={sessionId}
