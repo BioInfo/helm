@@ -1,16 +1,18 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { RepoList } from "@/components/repo/RepoList";
 import { AddRepoDialog } from "@/components/repo/AddRepoDialog";
 import { FileBrowserSheet } from "@/components/file-browser/FileBrowserSheet";
 import { Header } from "@/components/ui/header";
 import { Button } from "@/components/ui/button";
-import { Plus, FolderOpen } from "lucide-react";
+import { Plus, FolderOpen, ArrowLeft } from "lucide-react";
 import { ServerIndicator } from "@/components/servers";
 import { ToolsIndicator } from "@/components/mcp";
 import { TerminalIndicator } from "@/components/terminal";
 import { TokenCounter } from "@/components/observability";
 
 export function Repos() {
+  const navigate = useNavigate();
   const [addRepoOpen, setAddRepoOpen] = useState(false);
   const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
 
@@ -22,7 +24,15 @@ export function Repos() {
     <div className="h-dvh max-h-dvh overflow-hidden bg-gradient-to-br from-background via-background to-background flex flex-col">
       <Header>
         <div className="flex items-center gap-3">
-          <Header.Title logo>OpenCode</Header.Title>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/")}
+            className="h-8 w-8"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <Header.Title>Repos</Header.Title>
         </div>
         <Header.Actions>
           <TokenCounter />
