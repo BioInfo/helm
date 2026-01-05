@@ -76,8 +76,7 @@ async function getAnthropicApiKey(): Promise<string | null> {
         return config.providers.anthropic.apiKey
       }
     }
-  } catch {
-  }
+  } catch { /* config read may fail */ }
   
   return null
 }

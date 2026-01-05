@@ -73,7 +73,7 @@ export async function discoverServers(): Promise<OpenCodeServer[]> {
           if (tty && tty !== '?' && tty !== '??') {
             mode = 'tui'
           }
-        } catch {}
+          } catch { /* fallback health check may fail */ }
         
         let status: 'healthy' | 'unhealthy' = 'unhealthy'
         try {
@@ -97,7 +97,7 @@ export async function discoverServers(): Promise<OpenCodeServer[]> {
             if (response.ok || response.status === 401) {
                 status = 'healthy'
             }
-          } catch {}
+        } catch { /* tty detection may fail */ }
         }
         
         const projectName = workdir !== 'unknown' ? path.basename(workdir) : 'Unknown Project'

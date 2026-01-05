@@ -31,7 +31,7 @@ export function createFileRoutes() {
       
       if (raw && !result.isDirectory) {
         const content = await fileService.getRawFileContent(userPath)
-        return new Response(content, {
+        return new Response(new Uint8Array(content), {
           headers: {
             'Content-Type': result.mimeType || 'application/octet-stream',
             'Content-Length': result.size.toString(),

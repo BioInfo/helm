@@ -26,7 +26,7 @@ export function RemoteServersSettings() {
     try {
       const data = await remoteServersApi.list()
       setServers(data)
-    } catch (error) {
+    } catch {
       showToast.error('Failed to load remote servers')
     } finally {
       setIsLoading(false)
@@ -222,8 +222,9 @@ function AddServerDialog({
       setName('')
       setHost('')
       setPort('60828')
-    } catch (error: any) {
-      showToast.error(error.message || 'Failed to add server')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to add server'
+      showToast.error(message)
     } finally {
       setIsSubmitting(false)
     }

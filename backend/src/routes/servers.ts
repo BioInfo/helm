@@ -64,7 +64,7 @@ async function discoverAllServers(): Promise<OpenCodeServer[]> {
           status = 'healthy'
           updateRemoteServerLastSeen(db, config.id)
         }
-      } catch {}
+      } catch { /* remote server may be unreachable */ }
     }
     
     remoteServers.push({

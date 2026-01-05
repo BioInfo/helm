@@ -338,7 +338,7 @@ export function createTTSRoutes(db: Db) {
       const cachedAudio = await getCachedAudio(cacheKey)
       if (cachedAudio) {
         logger.info(`TTS cache hit: ${cacheKey.substring(0, 8)}...`)
-        return new Response(cachedAudio, {
+        return new Response(new Uint8Array(cachedAudio), {
           headers: {
             'Content-Type': 'audio/mpeg',
             'X-Cache': 'HIT',
