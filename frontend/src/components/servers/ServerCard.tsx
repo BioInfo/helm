@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Circle, Terminal, Server, Folder, MessageSquarePlus, Loader2, Globe } from "lucide-react"
+import { Circle, Terminal, Server, Folder, MessageSquarePlus, Loader2, Globe, List } from "lucide-react"
 import type { OpenCodeServer } from "@/stores/serverStore"
 import { findOrCreateRepoForPath } from "@/api/repos"
 import { OpenCodeClient } from "@/api/opencode"
@@ -17,8 +17,29 @@ interface ServerCardProps {
 export function ServerCard({ server, isSelected, onSelect }: ServerCardProps) {
   const navigate = useNavigate()
   const [isStartingSession, setIsStartingSession] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
   const isHealthy = server.status === 'healthy'
   const isTui = server.mode === 'tui'
+
+  const handleViewSessions = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    
+    if (!isHealthy) {
+      showToast.error('Cannot view sessions: server is unhealthy')
+      return
+    }
+
+    setIsNavigating(true)
+    try {
+      const repo = await findOrCreateRepoForPath(server.workdir, server.isRemote)
+      navigate(`/repos/${repo.id}`)
+    } catch (error) {
+      console.error('Failed to navigate:', error)
+      showToast.error(error instanceof Error ? error.message : 'Failed to load sessions')
+    } finally {
+      setIsNavigating(false)
+    }
+  }
 
   const handleStartSession = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -120,25 +141,36 @@ export function ServerCard({ server, isSelected, onSelect }: ServerCardProps) {
             )}
           </div>
 
-          <Button
-            size="sm"
-            variant={isHealthy ? "default" : "secondary"}
-            className="mt-2 h-8 text-xs gap-1.5 w-full"
-            onClick={handleStartSession}
-            disabled={!isHealthy || isStartingSession}
-          >
-            {isStartingSession ? (
-              <>
+          <div className="flex gap-2 mt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1.5 flex-1"
+              onClick={handleViewSessions}
+              disabled={!isHealthy || isNavigating}
+            >
+              {isNavigating ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Starting...
-              </>
-            ) : (
-              <>
+              ) : (
+                <List className="w-3.5 h-3.5" />
+              )}
+              Sessions
+            </Button>
+            <Button
+              size="sm"
+              variant={isHealthy ? "default" : "secondary"}
+              className="h-8 text-xs gap-1.5 flex-1"
+              onClick={handleStartSession}
+              disabled={!isHealthy || isStartingSession}
+            >
+              {isStartingSession ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
                 <MessageSquarePlus className="w-3.5 h-3.5" />
-                Start Session
-              </>
-            )}
-          </Button>
+              )}
+              New
+            </Button>
+          </div>
         </div>
       </div>
     </div>
