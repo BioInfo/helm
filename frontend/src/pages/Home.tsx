@@ -73,10 +73,10 @@ const SESSIONS_PER_PAGE = 12
 export function Home() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedServerId, setSelectedServerId] = useState<string | null>(null)
   const [visibleCount, setVisibleCount] = useState(SESSIONS_PER_PAGE)
   const servers = useServerStore((state) => state.servers)
-  const refreshServers = useServerStore((state) => state.refresh)
+  const selectedServerId = useServerStore((state) => state.selectedServerId)
+  const refreshServers = useServerStore((state) => state.refreshServers)
   
   const healthyServers = useMemo(() => 
     servers.filter(s => s.status === 'healthy'),
@@ -247,34 +247,7 @@ export function Home() {
               </div>
             </div>
 
-            {/* Server Filter */}
-            {healthyServers.length > 0 && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                <Button
-                  variant={selectedServerId === null ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => setSelectedServerId(null)}
-                  className="shrink-0 h-8 rounded-full px-4 text-xs font-medium"
-                >
-                  All Servers
-                </Button>
-                {healthyServers.map(server => (
-                  <Button
-                    key={server.id}
-                    variant={selectedServerId === server.id ? "secondary" : "ghost"}
-                    size="sm"
-                    onClick={() => setSelectedServerId(server.id)}
-                    className="shrink-0 h-8 rounded-full px-3 gap-2 text-xs font-medium border border-transparent data-[state=active]:border-border"
-                  >
-                    <div className={cn(
-                      "w-2 h-2 rounded-full",
-                      server.status === 'healthy' ? "bg-green-500" : "bg-red-500"
-                    )} />
-                    {server.projectName || `Port ${server.port}`}
-                  </Button>
-                ))}
-              </div>
-            )}
+
           </div>
 
           {/* Sessions List */}

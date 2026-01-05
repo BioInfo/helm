@@ -42,10 +42,15 @@ export function ServerIndicator() {
                 }`} 
               />
             </>
+          ) : totalCount > 0 ? (
+            <>
+              <span className="hidden sm:inline text-xs">All Servers</span>
+              <span className="text-xs text-muted-foreground">
+                {healthyCount}/{totalCount}
+              </span>
+            </>
           ) : (
-            <span className="text-xs">
-              {totalCount > 0 ? `${healthyCount}/${totalCount}` : 'No servers'}
-            </span>
+            <span className="text-xs">No servers</span>
           )}
           <ChevronDown className="w-3 h-3" />
         </Button>

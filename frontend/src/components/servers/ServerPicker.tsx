@@ -1,14 +1,15 @@
 import { useEffect, useCallback } from "react"
-import { RefreshCw, ServerOff, Loader2 } from "lucide-react"
+import { RefreshCw, ServerOff, Loader2, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ServerCard } from "./ServerCard"
 import { useServerStore, useSelectedServer } from "@/stores/serverStore"
 
 interface ServerPickerProps {
-  onServerSelect?: (serverId: string) => void
+  onServerSelect?: (serverId: string | null) => void
+  showAllServersOption?: boolean
 }
 
-export function ServerPicker({ onServerSelect }: ServerPickerProps) {
+export function ServerPicker({ onServerSelect, showAllServersOption = true }: ServerPickerProps) {
   const { 
     servers, 
     selectedServerId, 
@@ -44,7 +45,7 @@ export function ServerPicker({ onServerSelect }: ServerPickerProps) {
     fetchServers()
   }, [fetchServers])
 
-  const handleServerSelect = (serverId: string) => {
+  const handleServerSelect = (serverId: string | null) => {
     selectServer(serverId)
     onServerSelect?.(serverId)
   }
@@ -106,14 +107,39 @@ export function ServerPicker({ onServerSelect }: ServerPickerProps) {
             </div>
           </div>
         ) : (
-          servers.map((server) => (
-            <ServerCard
-              key={server.id}
-              server={server}
-              isSelected={server.id === selectedServerId}
-              onSelect={handleServerSelect}
-            />
-          ))
+          <>
+            {showAllServersOption && servers.length > 1 && (
+              <button
+                onClick={() => handleServerSelect(null)}
+                className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                  selectedServerId === null
+                    ? 'border-primary bg-primary/5'
+                    : 'border-transparent hover:bg-muted/50'
+                }`}
+              >
+                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                  <Layers className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-sm">All Servers</p>
+                  <p className="text-xs text-muted-foreground">
+                    {servers.filter(s => s.status === 'healthy').length} healthy servers
+                  </p>
+                </div>
+                {selectedServerId === null && (
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                )}
+              </button>
+            )}
+            {servers.map((server) => (
+              <ServerCard
+                key={server.id}
+                server={server}
+                isSelected={server.id === selectedServerId}
+                onSelect={handleServerSelect}
+              />
+            ))}
+          </>
         )}
       </div>
 
