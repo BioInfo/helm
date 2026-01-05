@@ -20,13 +20,13 @@ export function createRepoRoutes(database: Db) {
   app.post('/', async (c) => {
     try {
       const body = await c.req.json()
-      const { repoUrl, localPath, branch, openCodeConfigName, useWorktree, provider, isRemote } = body
+      const { repoUrl, localPath, branch, openCodeConfigName, useWorktree, provider, isRemote, serverId } = body
 
       if (!repoUrl && !localPath) {
         return c.json({ error: 'Either repoUrl or localPath is required' }, 400)
       }
 
-      logger.info(`Creating repo - URL: ${repoUrl}, Provider: ${provider || 'auto-detect'}`)
+      logger.info(`Creating repo - URL: ${repoUrl}, Provider: ${provider || 'auto-detect'}, Server: ${serverId || 'none'}`)
       
       let repo
       if (localPath) {
@@ -34,6 +34,8 @@ export function createRepoRoutes(database: Db) {
           database,
           localPath,
           branch,
+          isRemote,
+          serverId,
           isRemote
         )
       } else {

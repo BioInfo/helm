@@ -31,7 +31,7 @@ export function ServerCard({ server, isSelected, onSelect }: ServerCardProps) {
 
     setIsNavigating(true)
     try {
-      const repo = await findOrCreateRepoForPath(server.workdir, server.isRemote)
+      const repo = await findOrCreateRepoForPath(server.workdir, server.isRemote, server.id)
       navigate(`/repos/${repo.id}`)
     } catch (error) {
       console.error('Failed to navigate:', error)
@@ -51,7 +51,7 @@ export function ServerCard({ server, isSelected, onSelect }: ServerCardProps) {
 
     setIsStartingSession(true)
     try {
-      const repo = await findOrCreateRepoForPath(server.workdir, server.isRemote)
+      const repo = await findOrCreateRepoForPath(server.workdir, server.isRemote, server.id)
       
       const opcodeUrl = `/api/servers/${server.id}/proxy`
       const client = new OpenCodeClient(opcodeUrl, server.workdir)

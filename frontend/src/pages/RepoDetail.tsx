@@ -64,6 +64,7 @@ export function RepoDetail() {
   const discoveredServerUrl = useServerUrlForDirectory(repoDirectory);
   
   const opcodeUrl = useMemo(() => {
+    if (repo?.serverId) return `${API_BASE_URL}/api/servers/${repo.serverId}/proxy`;
     if (discoveredServerUrl) return discoveredServerUrl;
     if (repo && !repo.isLocal) return OPENCODE_API_ENDPOINT;
     return null;

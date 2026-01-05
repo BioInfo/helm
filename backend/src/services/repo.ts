@@ -112,7 +112,9 @@ export async function initLocalRepo(
   database: Db,
   localPath: string,
   branch?: string,
-  skipExistsCheck?: boolean
+  skipExistsCheck?: boolean,
+  serverId?: string,
+  isRemote?: boolean
 ): Promise<Repo> {
   const normalizedPath = localPath.trim().replace(/\/+$/, '')
   const isExternalPath = normalizedPath.startsWith('/')
@@ -139,10 +141,12 @@ export async function initLocalRepo(
       cloneStatus: 'ready',
       clonedAt: Date.now(),
       isLocal: !skipExistsCheck,
+      serverId,
+      isRemote,
     }
     
     const repo = db.createRepo(database, createRepoInput)
-    logger.info(`Registered external repo: ${normalizedPath} (id: ${repo.id})`)
+    logger.info(`Registered external repo: ${normalizedPath} (id: ${repo.id}, serverId: ${serverId || 'none'})`)
     return repo
   }
   
@@ -153,6 +157,8 @@ export async function initLocalRepo(
     cloneStatus: 'cloning',
     clonedAt: Date.now(),
     isLocal: true,
+    serverId,
+    isRemote,
   }
   
   let repo: Repo

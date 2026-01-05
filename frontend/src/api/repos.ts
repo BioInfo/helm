@@ -7,12 +7,13 @@ export async function createRepo(
   branch?: string,
   openCodeConfigName?: string,
   useWorktree?: boolean,
-  isRemote?: boolean
+  isRemote?: boolean,
+  serverId?: string
 ): Promise<Repo> {
   const response = await fetch(`${API_BASE_URL}/api/repos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ repoUrl, localPath, branch, openCodeConfigName, useWorktree, isRemote }),
+    body: JSON.stringify({ repoUrl, localPath, branch, openCodeConfigName, useWorktree, isRemote, serverId }),
   })
 
   if (!response.ok) {
@@ -190,7 +191,7 @@ export async function downloadRepo(id: number, repoName: string): Promise<void> 
   window.URL.revokeObjectURL(url)
 }
 
-export async function findOrCreateRepoForPath(localPath: string, isRemote?: boolean): Promise<Repo> {
+export async function findOrCreateRepoForPath(localPath: string, isRemote?: boolean, serverId?: string): Promise<Repo> {
   const repos = await listRepos()
   const existingRepo = repos.find(r => r.fullPath === localPath || r.localPath === localPath)
   
@@ -198,5 +199,5 @@ export async function findOrCreateRepoForPath(localPath: string, isRemote?: bool
     return existingRepo
   }
   
-  return createRepo(undefined, localPath, undefined, undefined, undefined, isRemote)
+  return createRepo(undefined, localPath, undefined, undefined, undefined, isRemote, serverId)
 }

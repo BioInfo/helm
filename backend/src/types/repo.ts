@@ -15,4 +15,6 @@ export interface CreateRepoInput {
   clonedAt: number
   isWorktree?: boolean
   isLocal?: boolean
+  serverId?: string
+  isRemote?: boolean
 }

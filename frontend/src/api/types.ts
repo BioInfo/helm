@@ -12,6 +12,8 @@ export interface Repo {
   openCodeConfigName?: string
   isWorktree?: boolean
   isLocal?: boolean
+  serverId?: string
+  isRemote?: boolean
 }
 
 import type { components } from './opencode-types'

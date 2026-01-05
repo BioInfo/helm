@@ -81,7 +81,9 @@ export function SessionDetail() {
     },
   });
 
-  const opcodeUrl = OPENCODE_API_ENDPOINT;
+  const opcodeUrl = repo?.serverId 
+    ? `${API_BASE_URL}/api/servers/${repo.serverId}/proxy`
+    : OPENCODE_API_ENDPOINT;
   
   const repoDirectory = repo?.fullPath;
 

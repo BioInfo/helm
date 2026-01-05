@@ -15,6 +15,8 @@ export const RepoSchema = z.object({
   openCodeConfigName: z.string().optional(),
   isWorktree: z.boolean().optional(),
   isLocal: z.boolean().optional(),
+  serverId: z.string().optional(),
+  isRemote: z.boolean().optional(),
 })
 
 export const CreateRepoRequestSchema = z.object({
@@ -23,6 +25,8 @@ export const CreateRepoRequestSchema = z.object({
   branch: z.string().optional(),
   openCodeConfigName: z.string().optional(),
   useWorktree: z.boolean().optional(),
+  serverId: z.string().optional(),
+  isRemote: z.boolean().optional(),
 }).refine(
   (data) => data.repoUrl || data.localPath,
   {

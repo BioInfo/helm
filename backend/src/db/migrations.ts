@@ -85,7 +85,9 @@ export function runMigrations(db: Db): void {
       { name: 'last_pulled', sql: 'ALTER TABLE repos ADD COLUMN last_pulled INTEGER' },
       { name: 'opencode_config_name', sql: 'ALTER TABLE repos ADD COLUMN opencode_config_name TEXT' },
       { name: 'is_worktree', sql: 'ALTER TABLE repos ADD COLUMN is_worktree BOOLEAN DEFAULT FALSE' },
-      { name: 'is_local', sql: 'ALTER TABLE repos ADD COLUMN is_local BOOLEAN DEFAULT FALSE' }
+      { name: 'is_local', sql: 'ALTER TABLE repos ADD COLUMN is_local BOOLEAN DEFAULT FALSE' },
+      { name: 'server_id', sql: 'ALTER TABLE repos ADD COLUMN server_id TEXT' },
+      { name: 'is_remote', sql: 'ALTER TABLE repos ADD COLUMN is_remote BOOLEAN DEFAULT FALSE' }
     ]
     
     for (const column of requiredColumns) {

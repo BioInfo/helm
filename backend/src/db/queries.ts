@@ -16,6 +16,8 @@ export interface RepoRow {
   opencode_config_name?: string
   is_worktree?: number
   is_local?: number
+  server_id?: string
+  is_remote?: number
 }
 
 function rowToRepo(row: RepoRow): Repo {
@@ -33,6 +35,8 @@ function rowToRepo(row: RepoRow): Repo {
     openCodeConfigName: row.opencode_config_name,
     isWorktree: row.is_worktree ? Boolean(row.is_worktree) : undefined,
     isLocal: row.is_local ? Boolean(row.is_local) : undefined,
+    serverId: row.server_id,
+    isRemote: row.is_remote ? Boolean(row.is_remote) : undefined,
   }
 }
 
@@ -48,8 +52,8 @@ export function createRepo(db: Db, repo: CreateRepoInput): Repo {
   }
   
   const stmt = db.prepare(`
-    INSERT INTO repos (repo_url, local_path, branch, default_branch, clone_status, cloned_at, is_worktree, is_local)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO repos (repo_url, local_path, branch, default_branch, clone_status, cloned_at, is_worktree, is_local, server_id, is_remote)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
   
   try {
@@ -61,7 +65,9 @@ export function createRepo(db: Db, repo: CreateRepoInput): Repo {
       repo.cloneStatus,
       repo.clonedAt,
       repo.isWorktree ? 1 : 0,
-      repo.isLocal ? 1 : 0
+      repo.isLocal ? 1 : 0,
+      repo.serverId || null,
+      repo.isRemote ? 1 : 0
     )
     
     const newRepo = getRepoById(db, Number(result.lastInsertRowid))
@@ -147,6 +153,11 @@ export function updateLastPulled(db: Db, id: number): void {
 export function deleteRepo(db: Db, id: number): void {
   const stmt = db.prepare('DELETE FROM repos WHERE id = ?')
   stmt.run(id)
+}
+
+export function updateRepoServerId(db: Db, id: number, serverId: string | null, isRemote?: boolean): void {
+  const stmt = db.prepare('UPDATE repos SET server_id = ?, is_remote = ? WHERE id = ?')
+  stmt.run(serverId, isRemote ? 1 : 0, id)
 }
 
 export interface RemoteServer {
