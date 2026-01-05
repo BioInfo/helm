@@ -17,13 +17,13 @@ cd helm
 pnpm install
 pnpm dev
 
-# Frontend: http://localhost:5173
+# Frontend: http://localhost:5174
 # Backend API: http://localhost:5001
 ```
 
 ## Commands
 
-- `pnpm dev` - Start both backend (5001) and frontend (5173)
+- `pnpm dev` - Start both backend (5001) and frontend (5174)
 - `pnpm dev:backend` - Backend only: `tsx watch backend/src/index.ts`
 - `pnpm dev:frontend` - Frontend only: `cd frontend && vite`
 - `pnpm build` - Build both backend and frontend

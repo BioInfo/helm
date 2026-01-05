@@ -52,7 +52,7 @@ pnpm install
 # Run
 pnpm dev
 
-# Open http://localhost:5173 (frontend dev server)
+# Open http://localhost:5174 (frontend dev server)
 # API available at http://localhost:5001
 ```
 
@@ -72,7 +72,7 @@ Helm auto-discovers all running instances and lets you switch between them.
 pnpm dev
 
 # On your iPhone via Tailscale
-# Navigate to http://your-mac.tailnet:5173
+# Navigate to http://your-mac.tailnet:5174
 ```
 
 ### With Docker (Isolated/Single-Server)
