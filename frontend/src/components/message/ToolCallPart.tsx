@@ -74,6 +74,18 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
   const { userBashCommands } = useUserBash()
   const { getPermissionForCallID } = usePermissionContext()
   const outputRef = useRef<HTMLDivElement>(null)
+
+  // Hide passive context retrieval tools (they just add context to prompts)
+  const HIDDEN_CONTEXT_TOOLS = ['supermemory', 'memory', 'context', 'retrieve']
+  const isContextTool = HIDDEN_CONTEXT_TOOLS.some(tool =>
+    part.tool.toLowerCase().includes(tool.toLowerCase())
+  )
+
+  // Don't render context retrieval tools inline - they're just background context
+  if (isContextTool && preferences?.hideContextTools !== false) {
+    return null
+  }
+
   const isUserBashCommand = part.tool === 'bash' &&
     part.state.status === 'completed' &&
     typeof part.state.input?.command === 'string' &&
