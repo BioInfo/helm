@@ -1,10 +1,23 @@
-# Helm
+<p align="center">
+  <img src="./assets/helm-banner.png" alt="Helm Banner" width="100%">
+</p>
 
-**Take the helm from anywhere.**
+<p align="center">
+  <strong>Take the helm from anywhere.</strong>
+</p>
 
-A unified mobile-first command center for managing multiple OpenCode instances. Built for iPhone + Tailscale workflows.
+<p align="center">
+  <a href="https://github.com/BioInfo/helm/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D20-brightgreen" alt="Node.js"></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.0+-3178c6" alt="TypeScript"></a>
+  <a href="https://github.com/BioInfo/helm/stargazers"><img src="https://img.shields.io/github/stars/BioInfo/helm?style=social" alt="GitHub Stars"></a>
+</p>
 
-## What is Helm?
+---
+
+## 🎯 What is Helm?
+
+A **unified mobile-first command center** for managing multiple OpenCode instances. Built for iPhone + Tailscale workflows.
 
 Helm is a fork of [chriswritescode-dev/opencode-web](https://github.com/chriswritescode-dev/opencode-web) that adds:
 
@@ -14,28 +27,41 @@ Helm is a fork of [chriswritescode-dev/opencode-web](https://github.com/chriswri
 - **Touch-first UX** — Swipe gestures, bottom nav, haptic feedback
 - **Offline support** — Cache sessions and queue messages when offline
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                          HELM                                │
-│                                                              │
-│   ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐           │
-│   │  Chat  │  │  Files │  │  Tools │  │Terminal│           │
-│   └────────┘  └────────┘  └────────┘  └────────┘           │
-│                                                              │
-│   ┌───────────────────────────────────────────────────────┐ │
-│   │           project-a │ project-b │ project-c           │ │
-│   │              TUI    │   serve   │    TUI              │ │
-│   └───────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="./assets/helm-architecture.png" alt="Helm Architecture" width="100%">
+</p>
 
-## Requirements
+---
 
-- **Node.js** 20+ 
+## ✨ Features
+
+### Inherited from opencode-web
+- ✅ Mobile-first PWA
+- ✅ Git integration (diff, branches, PRs)
+- ✅ MCP server configuration
+- ✅ Session management
+- ✅ File browser with syntax highlighting
+- ✅ Model selection and provider management
+- ✅ Text-to-speech for AI responses
+
+### Added by Helm
+- ⚡ **Multi-server discovery** — Auto-detect OpenCode instances via lsof
+- 🔄 **Server switching** — Seamlessly switch between projects
+- 🔍 **MCP tool feed** — Real-time visibility into tool calls
+- 💻 **Embedded terminal** — Xterm.js with PTY backend
+- 📱 **Bottom navigation** — Mobile-optimized tab bar
+- 📴 **Offline mode** — IndexedDB caching + message queue
+- 👆 **Touch gestures** — Swipe-to-go-back, haptic feedback
+
+---
+
+## 🚀 Quick Start
+
+### Requirements
+
+- **Node.js** 20+
 - **pnpm** 9+
 - **OpenCode** CLI (`npm install -g @anthropics/opencode`)
-
-## Quick Start
 
 ### Native (Recommended)
 
@@ -65,7 +91,7 @@ cd ~/project-infra && opencode        # TUI mode - Helm will find it
 
 Helm auto-discovers all running instances and lets you switch between them.
 
-### With Tailscale (Mobile Access)
+### 📱 With Tailscale (Mobile Access)
 
 ```bash
 # On your Mac
@@ -73,9 +99,10 @@ pnpm dev
 
 # On your iPhone via Tailscale
 # Navigate to http://your-mac.tailnet:5174
+# Add to Home Screen for native app feel
 ```
 
-### With Docker (Isolated/Single-Server)
+### 🐳 With Docker (Isolated/Single-Server)
 
 Docker mode runs a single embedded OpenCode instance. Use this for:
 - Isolated environments
@@ -89,29 +116,11 @@ docker-compose up -d
 
 > **Note:** Docker cannot discover OpenCode instances on the host machine due to process isolation. For multi-server discovery, run Helm natively.
 
-## Features
+---
 
-### Inherited from opencode-web
-- Mobile-first PWA
-- Git integration (diff, branches, PRs)
-- MCP server configuration
-- Session management
-- File browser with syntax highlighting
-- Model selection and provider management
-- Text-to-speech for AI responses
+## 🗺️ Roadmap
 
-### Added by Helm
-- **Multi-server discovery** — Auto-detect OpenCode instances via lsof
-- **Server switching** — Seamlessly switch between projects
-- **MCP tool feed** — Real-time visibility into tool calls
-- **Embedded terminal** — Xterm.js with PTY backend
-- **Bottom navigation** — Mobile-optimized tab bar
-- **Offline mode** — IndexedDB caching + message queue
-- **Touch gestures** — Swipe-to-go-back, haptic feedback
-
-## Roadmap
-
-### Current (v0.1)
+### Current (v0.1) ✅
 - [x] Multi-server discovery (local via lsof)
 - [x] Server switching UI
 - [x] Embedded terminal
@@ -119,21 +128,23 @@ docker-compose up -d
 - [x] Mobile-first UX
 - [x] Docker deployment option
 
-### Planned (v0.2)
+### Planned (v0.2) 🚧
 - [ ] **Claude Code native integration** — Unified discovery and support for both OpenCode and Claude Code
 - [ ] **Multi-machine discovery** — See instances across Mac, Linux servers, Raspberry Pis, cloud VMs
 - [ ] Network-based server registration
 - [ ] SSH tunnel support for remote instances
 - [ ] Server grouping by machine/location
 
-### Future
+### Future 🔮
 - [ ] Swarm task visualization
 - [ ] Cost budgets and alerts
 - [ ] Session sharing/collaboration
 - [ ] Custom MCP server templates
 - [ ] Agent orchestration UI (parallel task decomposition)
 
-## Documentation
+---
+
+## 📚 Documentation
 
 | Document | Purpose |
 |----------|---------|
@@ -143,7 +154,9 @@ docker-compose up -d
 | [docs/PRD.md](./docs/PRD.md) | Product requirements & architecture |
 | [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Implementation progress tracker |
 
-## Troubleshooting
+---
+
+## 🛠️ Troubleshooting
 
 ### Apple Silicon (M1/M2/M3/M4)
 
@@ -171,7 +184,9 @@ curl -X POST http://localhost:5001/api/terminal/create \
   -d '{"workdir": "/tmp"}'
 ```
 
-## Origin Projects
+---
+
+## 🏛️ Origin Projects
 
 Helm combines the best ideas from:
 
@@ -180,7 +195,9 @@ Helm combines the best ideas from:
 - [VibeTunnel](https://vibetunnel.sh) — Terminal in browser concept
 - [OpenCode](https://opencode.ai) — The AI coding agent
 
-## Acknowledgments
+---
+
+## 🙏 Acknowledgments
 
 Special thanks to:
 
@@ -192,6 +209,8 @@ Special thanks to:
 
 Helm exists because developers before us shared their work openly. This project stands on the shoulders of giants.
 
-## License
+---
+
+## 📜 License
 
 MIT
