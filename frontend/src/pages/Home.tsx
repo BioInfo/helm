@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { useServerStore, type OpenCodeServer } from "@/stores/serverStore"
 import { findOrCreateRepoForPath } from "@/api/repos"
+import { OpenCodeClient } from "@/api/opencode"
 import { formatDistanceToNow } from "date-fns"
 import { ServerIndicator } from "@/components/servers"
 import { ToolsIndicator } from "@/components/mcp"
@@ -155,22 +156,18 @@ export function Home() {
   const handleNewSession = async (server: OpenCodeServer) => {
     try {
       const repo = await findOrCreateRepoForPath(
-        server.workdir, 
-        server.isRemote, 
+        server.workdir,
+        server.isRemote,
         server.id
       )
-      
-      const host = server.isRemote && server.remoteHost ? server.remoteHost : '127.0.0.1'
-      const response = await fetch(`http://${host}:${server.port}/session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: `Session - ${new Date().toLocaleTimeString()}` })
+
+      const opcodeUrl = `/api/servers/${server.id}/proxy`
+      const client = new OpenCodeClient(opcodeUrl, server.workdir)
+      const session = await client.createSession({
+        title: `Session - ${new Date().toLocaleTimeString()}`
       })
-      
-      if (response.ok) {
-        const session = await response.json()
-        navigate(`/repos/${repo.id}/sessions/${session.id}`)
-      }
+
+      navigate(`/repos/${repo.id}/sessions/${session.id}`)
     } catch (error) {
       console.error('Failed to create session:', error)
     }

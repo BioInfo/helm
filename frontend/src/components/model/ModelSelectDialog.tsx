@@ -19,6 +19,7 @@ import { useModelSelection } from "@/hooks/useModelSelection";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Model, ProviderWithModels } from "@/api/providers";
 import { ApiKeyDialog } from "./ApiKeyDialog";
+import { useOpenCodeClient } from "@/hooks/useOpenCode";
 
 interface ModelSelectDialogProps {
   open: boolean;
@@ -345,6 +346,7 @@ export function ModelSelectDialog({
 
   const queryClient = useQueryClient();
   const { modelString, setModel, recentModels } = useModelSelection(opcodeUrl, directory);
+  const client = useOpenCodeClient(opcodeUrl, directory);
   const currentModel = modelString || "";
 
   const { data: providers = [], isLoading: loading } = useQuery({
@@ -420,31 +422,53 @@ export function ModelSelectDialog({
     setSearchQuery(query);
   }, []);
 
-  const handleModelSelect = useCallback((providerId: string, modelId: string) => {
+  const handleModelSelect = useCallback(async (providerId: string, modelId: string) => {
     const provider = providers.find(p => p.id === providerId);
-    
+
     if (provider && !provider.isConnected) {
       setPendingSelection({ providerId, modelId });
       setProviderForApiKey(provider);
       setApiKeyDialogOpen(true);
       return;
     }
-    
+
     setModel({ providerID: providerId, modelID: modelId });
+
+    // Update OpenCode server config
+    if (client) {
+      try {
+        await client.updateConfig({ model: `${providerId}/${modelId}` });
+      } catch (error) {
+        console.error('Failed to update model in OpenCode config:', error);
+      }
+    }
+
     onOpenChange(false);
-  }, [setModel, onOpenChange, providers]);
+  }, [setModel, onOpenChange, providers, client]);
 
   const handleApiKeySuccess = useCallback(async () => {
     setApiKeyDialogOpen(false);
     await queryClient.invalidateQueries({ queryKey: ["providers-with-models"] });
-    
+
     if (pendingSelection) {
       setModel({ providerID: pendingSelection.providerId, modelID: pendingSelection.modelId });
+
+      // Update OpenCode server config
+      if (client) {
+        try {
+          await client.updateConfig({
+            model: `${pendingSelection.providerId}/${pendingSelection.modelId}`
+          });
+        } catch (error) {
+          console.error('Failed to update model in OpenCode config:', error);
+        }
+      }
+
       setPendingSelection(null);
       setProviderForApiKey(null);
       onOpenChange(false);
     }
-  }, [queryClient, pendingSelection, setModel, onOpenChange]);
+  }, [queryClient, pendingSelection, setModel, onOpenChange, client]);
 
   const handleApiKeyDialogClose = useCallback((open: boolean) => {
     setApiKeyDialogOpen(open);

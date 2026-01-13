@@ -79,3 +79,14 @@ bun.lockb
 # PWA generated files
 sw.js
 workbox-*.js
+
+# Development notes and planning (not for public repo)
+INVESTIGATION-TODO.md
+QUICK-FIXES.md
+docs/CLAUDE-CODE-*.md
+docs/OBSIDIAN_UPDATE.md
+SECURITY-*.md
+
+# Personal workspace state
+workspace/.opencode/state/
+backend/workspace/.opencode/state/

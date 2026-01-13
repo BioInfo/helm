@@ -120,7 +120,8 @@ docker-compose up -d
 - [x] Docker deployment option
 
 ### Planned (v0.2)
-- [ ] **Multi-machine discovery** — See OpenCode across Mac, DGX, Pi, cloud servers
+- [ ] **Claude Code native integration** — Unified discovery and support for both OpenCode and Claude Code
+- [ ] **Multi-machine discovery** — See instances across Mac, Linux servers, Raspberry Pis, cloud VMs
 - [ ] Network-based server registration
 - [ ] SSH tunnel support for remote instances
 - [ ] Server grouping by machine/location
@@ -130,6 +131,7 @@ docker-compose up -d
 - [ ] Cost budgets and alerts
 - [ ] Session sharing/collaboration
 - [ ] Custom MCP server templates
+- [ ] Agent orchestration UI (parallel task decomposition)
 
 ## Documentation
 
@@ -139,6 +141,7 @@ docker-compose up -d
 | [SECURITY.md](./SECURITY.md) | Security policy |
 | [AGENTS.md](./AGENTS.md) | Development context for AI agents |
 | [docs/PRD.md](./docs/PRD.md) | Product requirements & architecture |
+| [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Implementation progress tracker |
 
 ## Troubleshooting
 
@@ -176,6 +179,18 @@ Helm combines the best ideas from:
 - [joelhooks/opencode-vibe](https://github.com/joelhooks/opencode-vibe) — Multi-server discovery pattern
 - [VibeTunnel](https://vibetunnel.sh) — Terminal in browser concept
 - [OpenCode](https://opencode.ai) — The AI coding agent
+
+## Acknowledgments
+
+Special thanks to:
+
+- **[@chriswritescode](https://github.com/chriswritescode-dev)** — For building opencode-web, the foundation that made Helm possible
+- **[@joelhooks](https://github.com/joelhooks)** — For pioneering multi-server discovery patterns in opencode-vibe
+- **The VibeTunnel team** — For proving that browser-based terminal access can work beautifully
+- **[@anthropics](https://github.com/anthropics)** — For Claude Code and OpenCode, the AI coding agents that power modern development
+- **The Anthropic community** — For feedback, bug reports, and feature ideas that shape Helm's direction
+
+Helm exists because developers before us shared their work openly. This project stands on the shoulders of giants.
 
 ## License
 

@@ -71,7 +71,7 @@
 
 ## Target User
 
-**Justin's Use Case (Primary Persona):**
+**Primary Persona:**
 - Runs multiple OpenCode instances across different projects on Mac
 - Orchestrates complex coding tasks from iPhone while mobile
 - Needs visibility into what agents are doing (MCP tools, costs)
