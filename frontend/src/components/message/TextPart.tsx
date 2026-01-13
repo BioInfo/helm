@@ -184,6 +184,12 @@ function isMermaidBlockComplete(text: string): boolean {
   return false
 }
 
+function stripContextBlocks(text: string): string {
+  // Remove [SUPERMEMORY] blocks and similar context retrieval outputs
+  // These are added by MCP context tools and clutter the chat
+  return text.replace(/\[SUPERMEMORY\][\s\S]*?(?=\n\n|\n[a-z]|\n#|$)/gi, '').trim()
+}
+
 export function TextPart({ part }: TextPartProps) {
   const mermaidComplete = React.useMemo(() => {
     return part.text ? isMermaidBlockComplete(part.text) : false
@@ -193,6 +199,17 @@ export function TextPart({ part }: TextPartProps) {
     return (
       <div className="text-muted-foreground italic text-sm">
         [Empty message content]
+      </div>
+    )
+  }
+
+  // Filter out context retrieval blocks before rendering
+  const filteredText = stripContextBlocks(part.text)
+
+  if (!filteredText || filteredText.trim() === '') {
+    return (
+      <div className="text-muted-foreground italic text-sm">
+        [Context retrieval only]
       </div>
     )
   }
@@ -267,7 +284,7 @@ export function TextPart({ part }: TextPartProps) {
           }
         }}
       >
-        {part.text}
+        {filteredText}
       </ReactMarkdown>
     </div>
   )
