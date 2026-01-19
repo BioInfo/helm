@@ -16,6 +16,8 @@ import { createServersRoutes } from './routes/servers'
 import { createTerminalRoutes } from './routes/terminal'
 import { createRemoteServersRoutes } from './routes/remote-servers'
 import { createTitleRoutes } from './routes/title'
+import claudeSessionsRoutes from './routes/claude-sessions'
+import { claudeSessionsWatcher } from './claude-sessions-watcher'
 import { ensureDirectoryExists, writeFileContent, fileExists, readFileContent } from './services/file-operations'
 import { SettingsService } from './services/settings'
 import { opencodeServerManager } from './services/opencode-single-server'
@@ -221,6 +223,10 @@ try {
   opencodeServerManager.setDatabase(db)
   await opencodeServerManager.start()
   logger.info(`OpenCode server running on port ${opencodeServerManager.getPort()}`)
+
+  // Start Claude sessions watcher for real-time monitoring
+  await claudeSessionsWatcher.start()
+  logger.info('Claude sessions watcher started')
 } catch (error) {
   logger.error('Failed to initialize workspace:', error)
 }
@@ -236,6 +242,7 @@ app.route('/api/servers', createServersRoutes(db))
 app.route('/api/terminal', createTerminalRoutes())
 app.route('/api/remote-servers', createRemoteServersRoutes(db))
 app.route('/api/generate-title', createTitleRoutes(db))
+app.route('/api/claude-sessions', claudeSessionsRoutes)
 
 app.all('/api/opencode/*', async (c) => {
   const request = c.req.raw
@@ -306,13 +313,16 @@ let isShuttingDown = false
 const shutdown = async (signal: string) => {
   if (isShuttingDown) return
   isShuttingDown = true
-  
+
   logger.info(`${signal} received, shutting down gracefully...`)
   try {
+    await claudeSessionsWatcher.stop()
+    logger.info('Claude sessions watcher stopped')
+
     await opencodeServerManager.stop()
     logger.info('OpenCode server stopped')
   } catch (error) {
-    logger.error('Error stopping OpenCode server:', error)
+    logger.error('Error during shutdown:', error)
   }
   process.exit(0)
 }

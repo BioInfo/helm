@@ -43,12 +43,10 @@ function HeaderTitle({ children, logo, className }: HeaderTitleProps) {
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      {logo && typeof children === "string" && children === "OpenCode" ? (
-        <img 
-          src={theme === 'light' ? "/opencode-wordmark-light.svg" : "/opencode-wordmark-dark.svg"} 
-          alt="OpenCode" 
-          className="h-6 w-auto sm:h-8"
-        />
+      {logo && typeof children === "string" && children === "Helm" ? (
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">Helm</span>
+        </h1>
       ) : (
         <h1 className="text-xl font-semibold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent truncate">
           {children}

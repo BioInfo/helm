@@ -70,7 +70,7 @@ export function ServerPicker({ onServerSelect, showAllServersOption = true }: Se
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between p-3 border-b sticky top-0 bg-background z-10">
-        <h2 className="font-semibold text-sm">OpenCode Servers</h2>
+        <h2 className="font-semibold text-sm">CLI Servers</h2>
         <Button 
           variant="ghost" 
           size="sm" 
@@ -90,16 +90,19 @@ export function ServerPicker({ onServerSelect, showAllServersOption = true }: Se
         ) : servers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center px-4">
             <ServerOff className="w-10 h-10 text-muted-foreground/50 mb-3" />
-            <p className="text-sm text-muted-foreground font-medium">No OpenCode servers found</p>
+            <p className="text-sm text-muted-foreground font-medium">No CLI servers found</p>
             <div className="text-xs text-muted-foreground/70 mt-2 space-y-1.5 max-w-[280px]">
               <p>
-                Helm discovers running OpenCode instances via <code className="px-1 py-0.5 bg-muted rounded text-[10px]">lsof</code>.
+                Helm discovers running OpenCode and Claude Code instances via <code className="px-1 py-0.5 bg-muted rounded text-[10px]">lsof</code>.
               </p>
               <p>
-                Start OpenCode in any project directory:
+                Start a CLI in any project directory:
               </p>
               <code className="block px-2 py-1.5 bg-muted rounded text-[10px] font-mono">
                 cd ~/your-project && opencode
+              </code>
+              <code className="block px-2 py-1.5 bg-muted rounded text-[10px] font-mono mt-1">
+                cd ~/your-project && claude
               </code>
               <p className="text-muted-foreground/50 pt-1">
                 Discovery refreshes every ~5 seconds

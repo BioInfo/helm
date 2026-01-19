@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
-import { 
-  MessageSquare, 
-  Loader2, 
-  Search, 
-  Server, 
+import {
+  MessageSquare,
+  Search,
+  Server,
   Clock,
   FolderOpen,
   Plus,
   RefreshCw,
   Database,
-  ArrowRight
+  ArrowRight,
+  Wifi,
+  WifiOff
 } from "lucide-react"
 import { useServerStore, type OpenCodeServer } from "@/stores/serverStore"
 import { findOrCreateRepoForPath } from "@/api/repos"
@@ -26,6 +27,7 @@ import { ServerIndicator } from "@/components/servers"
 import { ToolsIndicator } from "@/components/mcp"
 import { TerminalIndicator } from "@/components/terminal"
 import { TokenCounter } from "@/components/observability"
+import { useClaudeSessionsSSE, type SessionData } from "@/hooks/useClaudeSessionsSSE"
 import { cn } from "@/lib/utils"
 
 interface RawSession {
@@ -36,25 +38,28 @@ interface RawSession {
   updatedAt?: number
 }
 
-interface SessionInfo {
+// Unified session type that works for both OpenCode and Claude sessions
+type SessionInfo = (SessionData | {
   id: string
   title: string
   directory: string
   createdAt: number
   updatedAt: number
-  server: OpenCodeServer
+}) & {
+  server?: OpenCodeServer
 }
 
 async function fetchSessionsFromServer(server: OpenCodeServer): Promise<SessionInfo[]> {
+  // Terminal-only servers have no HTTP endpoint, skip them
   if (server.status !== 'healthy') return []
-  
+
   const host = server.isRemote && server.remoteHost ? server.remoteHost : '127.0.0.1'
   const url = `http://${host}:${server.port}/session`
-  
+
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(3000) })
     if (!response.ok) return []
-    
+
     const sessions: RawSession[] = await response.json()
     return sessions.map((s) => ({
       id: s.id,
@@ -94,36 +99,63 @@ export function Home() {
     return Array.from(byWorkdir.values())
   }, [healthyServers])
 
-  const { data: allSessions = [], isLoading, refetch } = useQuery({
-    queryKey: ['all-sessions', serversDeduplicatedByWorkdir.map(s => s.id).join(',')],
+  // Fetch OpenCode sessions from healthy servers
+  const { data: opencodeSessions = [] } = useQuery({
+    queryKey: ['opencode-sessions', serversDeduplicatedByWorkdir.map(s => s.id).join(',')],
     queryFn: async () => {
       const results = await Promise.all(
         serversDeduplicatedByWorkdir.map(server => fetchSessionsFromServer(server))
       )
-      return results.flat().sort((a, b) => b.updatedAt - a.updatedAt)
+      return results.flat()
     },
     enabled: serversDeduplicatedByWorkdir.length > 0,
     refetchInterval: 30000,
   })
 
+  // Real-time Claude Code sessions via SSE
+  const {
+    sessions: claudeSessions,
+    isConnected: isSSEConnected
+  } = useClaudeSessionsSSE({
+    enabled: true,
+    onSessionChange: (type, sessions) => {
+      console.log(`Session ${type}:`, sessions.length, 'total sessions')
+    }
+  })
+
+  // Combine all sessions
+  const allSessions = useMemo(() => {
+    return [...opencodeSessions, ...claudeSessions].sort((a, b) => b.updatedAt - a.updatedAt)
+  }, [opencodeSessions, claudeSessions])
+
+  const isLoading = false // Both queries handle their own loading
+
   const filteredSessions = useMemo(() => {
     let sessions = allSessions
-    
+
     if (selectedServerId) {
-      sessions = sessions.filter(s => s.server.id === selectedServerId)
+      // Filter by server for OpenCode sessions, or by directory for Claude sessions
+      sessions = sessions.filter(s => {
+        if (s.server) {
+          return s.server.id === selectedServerId
+        }
+        // For Claude sessions (no server), match against selected server's working directory
+        const selectedServer = servers.find(srv => srv.id === selectedServerId)
+        return selectedServer && s.directory === selectedServer.workdir
+      })
     }
-    
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
-      sessions = sessions.filter(s => 
+      sessions = sessions.filter(s =>
         s.title.toLowerCase().includes(query) ||
         s.directory.toLowerCase().includes(query) ||
-        s.server.projectName?.toLowerCase().includes(query)
+        s.server?.projectName?.toLowerCase().includes(query)
       )
     }
     
     return sessions
-  }, [allSessions, selectedServerId, searchQuery])
+  }, [allSessions, selectedServerId, searchQuery, servers])
 
   const visibleSessions = useMemo(() => 
     filteredSessions.slice(0, visibleCount),
@@ -142,10 +174,14 @@ export function Home() {
 
   const handleSessionClick = async (session: SessionInfo) => {
     try {
+      // For Claude sessions without a server, use default values
+      const isRemote = session.server?.isRemote ?? false
+      const serverId = session.server?.id ?? ''
+
       const repo = await findOrCreateRepoForPath(
-        session.directory, 
-        session.server.isRemote, 
-        session.server.id
+        session.directory,
+        isRemote,
+        serverId
       )
       navigate(`/repos/${repo.id}/sessions/${session.id}`)
     } catch (error) {
@@ -175,7 +211,7 @@ export function Home() {
 
   const handleRefresh = () => {
     refreshServers()
-    refetch()
+    // SSE handles real-time updates, no need to refetch
   }
 
   const getProjectName = (path: string) => {
@@ -187,8 +223,16 @@ export function Home() {
     <div className="h-dvh max-h-dvh overflow-hidden bg-background flex flex-col">
       {/* Header - Fixed */}
       <Header>
-        <Header.Title logo>OpenCode</Header.Title>
+        <Header.Title logo>Helm</Header.Title>
         <Header.Actions>
+          {/* Real-time connection indicator */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {isSSEConnected ? (
+              <><Wifi className="w-3 h-3 text-green-500" /><span className="hidden sm:inline">Live</span></>
+            ) : (
+              <><WifiOff className="w-3 h-3 text-orange-500" /><span className="hidden sm:inline">Polling</span></>
+            )}
+          </div>
           <TokenCounter />
           <ToolsIndicator />
           <TerminalIndicator />
@@ -260,18 +304,26 @@ export function Home() {
                 </div>
                 <h3 className="text-lg font-semibold mb-2">No Servers Connected</h3>
                 <p className="text-muted-foreground text-center max-w-md mb-6 px-4">
-                  OpenCode servers are detected automatically when running on your local network or via tailscale.
+                  CLI servers (OpenCode & Claude Code) are detected automatically when running on your local network or via Tailscale.
                 </p>
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => window.open('https://opencode.dev', '_blank')}>
+                  <Button variant="outline" onClick={() => window.open('https://github.com/BioInfo/helm', '_blank')}>
                     Documentation
                   </Button>
                 </div>
               </Card>
             ) : healthyServers.length === 0 ? (
-              <Card className="flex flex-col items-center justify-center py-16 border-dashed">
-                <Loader2 className="w-10 h-10 animate-spin text-primary/50 mb-4" />
-                <p className="text-muted-foreground font-medium">Connecting to servers...</p>
+              <Card className="flex flex-col items-center justify-center py-16 border-dashed bg-blue-500/5">
+                <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-4">
+                  <Server className="w-8 h-8 text-blue-500/70" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Terminal-Only Sessions Detected</h3>
+                <p className="text-muted-foreground text-center max-w-md mb-4 px-4">
+                  You have {servers.length} Claude Code terminal session{servers.length > 1 ? 's' : ''} running, but they don't have HTTP endpoints for web access.
+                </p>
+                <p className="text-sm text-muted-foreground/80 text-center max-w-md px-4">
+                  To view sessions in Helm, start OpenCode in serve mode or use Claude Code's web interface directly.
+                </p>
               </Card>
             ) : filteredSessions.length === 0 ? (
               <Card className="flex flex-col items-center justify-center py-16 border-dashed bg-muted/10">
@@ -300,11 +352,11 @@ export function Home() {
                         <div className="p-2 bg-primary/10 rounded-lg text-primary group-hover:scale-110 transition-transform duration-300">
                           <MessageSquare className="w-5 h-5" />
                         </div>
-                        <Badge 
-                          variant="outline" 
+                        <Badge
+                          variant="outline"
                           className="font-normal text-xs bg-background/50 backdrop-blur-sm"
                         >
-                          {session.server.projectName || 'Local'}
+                          {session.server?.projectName || 'Local'}
                         </Badge>
                       </div>
 

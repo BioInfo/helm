@@ -5,12 +5,14 @@ export interface OpenCodeServer {
   id: string
   pid: number
   port: number
-  mode: 'tui' | 'serve'
+  mode: 'tui' | 'serve' | 'terminal-only'
   workdir: string
-  status: 'healthy' | 'unhealthy'
+  status: 'healthy' | 'unhealthy' | 'terminal-only'
   projectName?: string
+  cliType?: 'opencode' | 'claude'
   isRemote?: boolean
   remoteHost?: string
+  startTime?: string
 }
 
 export interface ServerConfigResponse {

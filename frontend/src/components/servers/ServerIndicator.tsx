@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Server, ChevronDown, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
@@ -36,10 +37,19 @@ export function ServerIndicator() {
               <span className="hidden sm:inline max-w-[100px] truncate text-xs">
                 {selectedServer.projectName || 'Unknown'}
               </span>
-              <Circle 
+              {selectedServer.cliType && (
+                <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                  {selectedServer.cliType === 'claude' ? 'Claude' : 'OpenCode'}
+                </Badge>
+              )}
+              <Circle
                 className={`w-2 h-2 fill-current ${
-                  selectedServer.status === 'healthy' ? 'text-green-500' : 'text-red-500'
-                }`} 
+                  selectedServer.status === 'terminal-only'
+                    ? 'text-blue-500'
+                    : selectedServer.status === 'healthy'
+                    ? 'text-green-500'
+                    : 'text-red-500'
+                }`}
               />
             </>
           ) : totalCount > 0 ? (
@@ -57,7 +67,7 @@ export function ServerIndicator() {
       </DialogTrigger>
       <DialogContent className="max-w-sm p-0 overflow-hidden">
         <DialogHeader className="sr-only">
-          <DialogTitle>Select OpenCode Server</DialogTitle>
+          <DialogTitle>Select CLI Server</DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto">
           <ServerPicker onServerSelect={() => setOpen(false)} />

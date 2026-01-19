@@ -17,11 +17,11 @@
 
 ## 🎯 What is Helm?
 
-A **unified mobile-first command center** for managing multiple OpenCode instances. Built for iPhone + Tailscale workflows.
+A **unified mobile-first command center** for managing multiple OpenCode and Claude Code instances. Built for iPhone + Tailscale workflows.
 
 Helm is a fork of [chriswritescode-dev/opencode-web](https://github.com/chriswritescode-dev/opencode-web) that adds:
 
-- **Multi-server discovery** — Auto-finds all running OpenCode instances
+- **Multi-server discovery** — Auto-finds all running OpenCode and Claude Code instances
 - **MCP tool visibility** — See exactly what tools your agents are calling
 - **Embedded terminal** — Full terminal access from your browser
 - **Touch-first UX** — Swipe gestures, bottom nav, haptic feedback
@@ -45,7 +45,7 @@ Helm is a fork of [chriswritescode-dev/opencode-web](https://github.com/chriswri
 - ✅ Text-to-speech for AI responses
 
 ### Added by Helm
-- ⚡ **Multi-server discovery** — Auto-detect OpenCode instances via lsof
+- ⚡ **Multi-server discovery** — Auto-detect OpenCode and Claude Code instances via lsof
 - 🔄 **Server switching** — Seamlessly switch between projects
 - 🔍 **MCP tool feed** — Real-time visibility into tool calls
 - 💻 **Embedded terminal** — Xterm.js with PTY backend
@@ -61,11 +61,11 @@ Helm is a fork of [chriswritescode-dev/opencode-web](https://github.com/chriswri
 
 - **Node.js** 20+
 - **pnpm** 9+
-- **OpenCode** CLI (`npm install -g @anthropics/opencode`)
+- **OpenCode** CLI (`npm install -g @anthropics/opencode`) and/or **Claude Code** CLI
 
 ### Native (Recommended)
 
-Run Helm directly on your Mac to discover all local OpenCode instances:
+Run Helm directly on your Mac to discover all local OpenCode and Claude Code instances:
 
 ```bash
 # Clone
@@ -82,14 +82,14 @@ pnpm dev
 # API available at http://localhost:5001
 ```
 
-Then start OpenCode in your project directories:
+Then start OpenCode or Claude Code in your project directories:
 ```bash
-cd ~/project-api && opencode          # TUI mode - Helm will find it
-cd ~/project-frontend && opencode serve  # Headless - Helm will find it
-cd ~/project-infra && opencode        # TUI mode - Helm will find it
+cd ~/project-api && opencode          # OpenCode TUI mode - Helm will find it
+cd ~/project-frontend && claude serve # Claude Code headless - Helm will find it
+cd ~/project-infra && opencode serve  # OpenCode headless - Helm will find it
 ```
 
-Helm auto-discovers all running instances and lets you switch between them.
+Helm auto-discovers all running instances and lets you switch between them. Each server shows a badge indicating which CLI it's running (OpenCode or Claude).
 
 ### 📱 With Tailscale (Mobile Access)
 
