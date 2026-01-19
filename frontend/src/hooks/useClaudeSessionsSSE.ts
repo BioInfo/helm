@@ -46,7 +46,7 @@ export function useClaudeSessionsSSE(options: UseClaudeSessionsSSEOptions = {}) 
     if (!enabled || eventSourceRef.current) return
 
     try {
-      const baseUrl = import.meta.env.DEV ? 'http://localhost:5003' : ''
+      const baseUrl = import.meta.env.DEV ? 'http://localhost:5001' : ''
       const eventSource = new EventSource(`${baseUrl}/api/claude-sessions/stream`)
 
       eventSource.onopen = () => {
